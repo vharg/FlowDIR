@@ -6,9 +6,11 @@
 * FlowDir is based upon a simple topography analysis and is not a physical model
 * Able to provide probabilistic analysis in minutes.
 
+<center>[Instructions for use](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)
+</center>
 
-<center>[Instructions for use](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)</center>
+<center>[Case studies](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)
+</center>
 
-<center>[Case studies](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)</center>
-
-<center>[Link to paper](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)</center>
+<center>[Link to paper](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)
+</center>
