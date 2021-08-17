@@ -9,10 +9,10 @@ warning('off','all')
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):', 'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
 dlgtitle = 'FlowDir inputs';
 dims = [1 50];
-definput = {'Merapi','Merapi_DEM_Sylvain.tif','800', '150', '30', '300', '1', '30'};
+%definput = {'Merapi','Merapi_DEM_Sylvain.tif','800', '150', '30', '300', '1', '30'};
 %definput = {'Shinmoedake','Shinmoedake_2016_5m_clip.tif','1000', '150','30', '500', '1', '10'};%
 %definput = {'Colima','Colima_clip.tif','800', '150', '20', '500','1', '60'};
-%definput = {'Merapi','MerapiDEM_2015_10m_mrg.tif','800', '150', '50', '500', '1', '20'};
+definput = {'Merapi','Merapi.tif','800', '150', '50', '500', '1', '20'};
 
 
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
