@@ -22,9 +22,9 @@ FlowDir
 ```
 
 <li>Type `FlowDir`into the MATLAB command window and the following GUI will pop up:
+<br/>
 
-
-<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/GUI.png" width="250">
+<center><img src="https://github.com/EllyTennant/FlowDir/blob/main/images/GUI.png" width="250"></center>
 
 <li> The input parameters are defined as:
 
@@ -37,8 +37,9 @@ FlowDir
 * **Start uncertainty (m):** Here we define the distance to which uncertainty is included, for example if the DEM resolution is 10 m and 20 m is selected here, simulations are initiated from the 2 cells adjacent to the selected start point in each direction in addition to the start point, such that 17 unique simulations are conducted. 
 
 <li>FlowDir will plot the DEM, and ask you to clip it to an area of interest by drawing a polygon. +/- at the top right hand side of the plot can be used to zoom in or out.
+<br/>
 
-<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/clip_DEM.png" width="400">
+<center><img src="https://github.com/EllyTennant/FlowDir/blob/main/images/clip_DEM.png" width="400"></center>
 
 The new zoomed in DEM is then plotted and you can click to define the start point.
 
@@ -53,7 +54,7 @@ Start point # [4/17]
 Finished
 ```
 
-
+<br/>
 <li> When FlowDir is finished, all of the figures along with the workspace containing all variables, will be saved into the `out/Volcano Name` folder.
 
 <img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_ex.png" width="800">
