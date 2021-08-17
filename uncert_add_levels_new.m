@@ -3,7 +3,7 @@ clear all, close all, clc;
 tic
 warning('off','all')
 
-     
+%test   
     %% Set up input dialogue
     
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):', 'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
