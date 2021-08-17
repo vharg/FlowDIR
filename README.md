@@ -7,8 +7,8 @@
 * Able to provide probabilistic analysis in minutes.
 
 
-<center>[Instructions for use](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)
+<center>[Instructions for use](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)</center>
 
-[Case studies](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)
+<center>[Case studies](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)</center>
 
-[Link to paper](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)</center>
+<center>[Link to paper](https://github.com/EllyTennant/FlowDir/blob/main/FlowDir%20instructions.md)</center>
