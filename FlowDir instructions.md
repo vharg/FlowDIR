@@ -24,4 +24,4 @@ FlowDir
 3. 
 ![alt text](https://github.com/EllyTennant/FlowDir/blob/main/images/GUI.png)
 
-<img src="https:://github.com/EllyTennant/FlowDir/blob/main/images/GUI.png" width="100" height="100">
+<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/GUI.png" width="100" height="100">
