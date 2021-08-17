@@ -23,6 +23,7 @@ FlowDir
 
 <li>Type `FlowDir`into the MATLAB command window and the following GUI will pop up:
 
+
 <img src="https://github.com/EllyTennant/FlowDir/blob/main/images/GUI.png" width="250">
 
 <li> The input parameters are defined as:
@@ -55,6 +56,5 @@ Finished
 
 <li> When FlowDir is finished, all of the figures along with the workspace containing all variables, will be saved into the `out/Volcano Name` folder.
 
-<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_ex.png" width="600">
+<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_ex.png" width="800">
 
-<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/GUI.png" width="250">
