@@ -39,7 +39,7 @@ FlowDir
 <li>FlowDir will plot the DEM, and ask you to clip it to an area of interest by drawing a polygon. +/- at the top right hand side of the plot can be used to zoom in or out.
 <br/>
 
-<center><img src="https://github.com/EllyTennant/FlowDir/blob/main/images/clip_DEM.png" width="400"></center>
+<center><img src="https://github.com/EllyTennant/FlowDir/blob/main/images/clip_dem.png" width="400"></center>
 
 The new zoomed in DEM is then plotted and you can click to define the start point.
 
@@ -54,8 +54,8 @@ Start point # [4/17]
 Finished
 ```
 
-<br/>
 <li> When FlowDir is finished, all of the figures along with the workspace containing all variables, will be saved into the `out/Volcano Name` folder.
 
+<br/>
 <img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_ex.png" width="800">
 
