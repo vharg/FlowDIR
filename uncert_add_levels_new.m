@@ -5,14 +5,10 @@ warning('off','all')
 
     %% Set up input dialogue
     
-prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):', 'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
-dlgtitle = 'FlowDir inputs';
-dims = [1 50];
-%definput = {'Merapi','Merapi_DEM_Sylvain.tif','800', '150', '30', '300', '1', '30'};
-%definput = {'Shinmoedake','Shinmoedake_2016_5m_clip.tif','1000', '150','30', '500', '1', '10'};%
-%definput = {'Colima','Colima_clip.tif','800', '150', '20', '500','1', '60'};
-definput = {'Merapi','Merapi.tif','800', '150', '50', '500', '1', '20'};
-
+prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
+    'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
+dlgtitle = 'FlowDir inputs'; dims = [1 50];
+definput = {'Shinmoedake','Shinmoedake_2016_5m_clip.tif','800', '150','30', '100', '0', '5'};
 
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
 volcano = inputs{1};
@@ -23,49 +19,38 @@ Thr = str2double(inputs(5));
 steps = str2double(inputs(6));
 uncertainty = str2double(inputs(7));
 noCells = str2double(inputs(8));
-
 swath_nb = 360;
 
-DEM = GRIDobj(dem); % Read DEM
+DEM = GRIDobj(dem); 
 waitfor(msgbox('Draw polygon to clip DEM, double click when finished'))
 MASK = createmask(DEM, 'usehillshade'); 
 DEMc = crop(DEM,MASK,NaN);
 
-interp_to = 22.5; % Set the number of degrees to interpolate azimuths to
+% Set the number of degrees to interpolate azimuths to
+interp_to = 22.5; 
 swL = defaultSW;
 
-    %% Plot the DEM and select start point
+    %% Plot DEM and select start point
     
 figure(1)
 title('Click +/- to zoom in/out')
-imageschs(DEMc); colormap(parula); hold on
+imageschs(DEMc); colormap(parula); xlabel('East'); ylabel('North'); hold on
 FD = FLOWobj(DEMc);
 A  = flowacc(FD);
 S = STREAMobj(FD, flowacc(FD)>100); % Use low threshold to define streams
 plot(S,'b')
-% waitfor(msgbox('Click for start point'))
-% [craterX_temp, craterY_temp] = ginput(1);
-craterX_temp = [438896.5004];
-craterY_temp = [9166379.859];
+waitfor(msgbox('Click again for start point'))
+[craterX_temp, craterY_temp] = ginput(1);
+% craterX_temp = [438896.5004];
+% craterY_temp = [9166379.859];
 hold on, scatter(craterX_temp, craterY_temp, 'rx')
+xlabel('East'); ylabel('North');
 
-%all_buff = [50, 100, 150, 200, 250];
-%all_MS = [100,	200,	300,	400,	500,	1000]; 
-% all_craterX_temp = [438872.7664	438940.6107	438823.9124	438875.1971	438896.5004];
-% all_craterY_temp = [9166384.372	9166365.636	9166387.088	9166406.19	9166379.859];
-
-% %for cc = 1:length(all_craterX_temp)
-%     close all
-%     craterX_temp = all_craterX_temp(cc);
-%     craterY_temp = all_craterY_temp(cc);
-% % % 
-%steps = all_MS(MS);
-
-    %buff = all_buff(B)
 
     %% Get coords of start points used for start point uncertainty
     
-polyout = polybuffer([craterX_temp craterY_temp],'lines',noCells,'JointType','square'); % Generate a polygon
+% Generate a polygon
+polyout = polybuffer([craterX_temp craterY_temp],'lines',noCells,'JointType','square'); 
 
 xcells = linspace(min(polyout.Vertices(:,1)),max(polyout.Vertices(:,1)),...
     round((max(polyout.Vertices(:,1))-min(polyout.Vertices(:,1)))/DEM.cellsize));
@@ -79,7 +64,8 @@ scatter(xcells, ycells, 'rx')
 
 xcells = [craterX_temp; xcells]; ycells = [craterY_temp; ycells];
 
-T_all = cell(length(xcells),1); % space to store tables output for each point in stage 1.
+% space to store tables output for each point in stage 1.
+T_all = cell(length(xcells),1); 
 
 figure(2)
 set(gcf, 'visible','off')
@@ -91,7 +77,11 @@ sub_3 = subplot(2,3,4:6);
 str = sprintf('%s', 'Running FlowDir, please wait...' ); disp(str)
 
     %% Calculate for each of the start points
-
+% if uncertainty == 0
+%     xcells = xcells(1); ycells = ycells(1);
+% else
+%     disp('Running with uncertainty on start')
+    
 for coord = 1:length(xcells) % for all start points
     
     str = sprintf('%s[%d%s%d]', 'Start point # ', coord, '/', length(xcells)); 
@@ -99,24 +89,28 @@ for coord = 1:length(xcells) % for all start points
     
     craterX = xcells(coord); craterY = ycells(coord);
 
-           %% Setup swaths
-           
-    swath_width = DEM.cellsize.*2; % Each swath will have 2 pixels width.
-    angles = linspace(0, 359, swath_nb); % Generate azimuths
+    % Setup swaths, each swath will have 2 pixels width.
+    swath_width = DEM.cellsize.*2;
+    % Generate azimuths
+    angles = linspace(0, 359, swath_nb); 
 
-    x = swL * cosd(angles) + craterX; % Get coords points on a circle (radius = swL) for each angle
+    % Get coords points on a circle (radius = swL) for each angle
+    x = swL * cosd(angles) + craterX; 
     y = swL * sind(angles) + craterY;
 
-    tmp = zeros(swath_nb,1); % Correct radians to geographic azimuth
+    % Correct radians to geographic azimuth
+    tmp = zeros(swath_nb,1); 
     
         for iS = 1:swath_nb
         tmp(iS) = 90-(iS-1)*(swath_nb/360);
         end
         
-    tmp(tmp<0) = tmp(tmp<0)+360; % if less than zero add 360 to make positive 
+    % If less than zero add 360 to make positive 
+    tmp(tmp<0) = tmp(tmp<0)+360;
     [~, angleIdx] = sort(tmp);
     
-    x = x(angleIdx); % x and y are now points on a clockwise circle that has 1 = N
+    % x and y are now points on a clockwise circle that has 1 = N
+    x = x(angleIdx);
     y = y(angleIdx);
 
     swathSize = zeros(swath_nb, 1);
@@ -182,8 +176,9 @@ for coord = 1:length(xcells) % for all start points
     swathAll_clip = zeros(size(swathAll));
     X_all_clip = zeros(size(swathAll));
     Y_all_clip = zeros(size(swathAll));
-
-    b = round(buff/DEM.cellsize); % convert user input buffer to number of cells
+    
+    % convert user input buffer to number of cells
+    b = round(buff/DEM.cellsize);
 
         for i = 1:swath_nb
             sw = swathAll(:,i);
@@ -220,7 +215,7 @@ for coord = 1:length(xcells) % for all start points
             set(gca, 'Color', 'none')
             X = X_all_clip(1:10,:);
             Y = Y_all_clip(1:10,:);
-            set(gca, 'Position', [0.13,0.217336683417085,0.825555555555556,0.261306532663317])
+            set(gca, 'Position', [0.13,0.2173,0.8255,0.2613])
             set(gcf, 'Position', get(0, 'Screensize'));
             lim = ylim;
 
@@ -293,7 +288,9 @@ for coord = 1:length(xcells) % for all start points
     swathAll_clip( ~any(swathAll_clip,2), : ) = [];
 
     [s1 s2] = size(swathAll_clip);
-    mat = zeros(s1+1, s2+2); % empty matrix a bit bigger than swathAll
+    
+    % create empty matrix a bit bigger than swathAll
+    mat = zeros(s1+1, s2+2); 
 
     % Pad out matrix so that the calculation cant go backwards
     mat(1,:) = 10000; mat(:,1) = 10000; mat(:,s2+2) = 10000;
@@ -307,6 +304,7 @@ parfor j = 2:360  % start col
         
         i_all = []; j_all = [];
         i_all = [i_all, i]; j_all = [j_all, j];
+        
         % Get cells surrounding active cell
         surround_cells = [mat(i, j-1); mat(i, j+1); mat(i+1, j-1); mat(i+1, j); mat(i+1, j+1)]; 
         
@@ -363,8 +361,8 @@ count = 1;
     S_surround = S_surround(~any(ismissing(S_surround),2),:);
 
 
-    % Check if any cells in table have already been traversed at any point along the path, if yes delete from table
-    % for each row of the table, check the i and j values agains all
+    % Check if any cells in table have already been traversed at any point along the path, if 
+    % yes delete from table for each row of the table, check the i and j values against all
     % traversed
     SidI = S_surround.idI_surround;
     SidJ = S_surround.idJ_surround;
@@ -389,6 +387,7 @@ tId = [];
             break
         end 
         %% Check for cells with the same elevation
+        
     %if there are no repeat values in the lowest vals in the table use the first line of the table
 
     if height(S_surround) > 1
@@ -446,8 +445,10 @@ tId = [];
         end
     
     output = [];
+    
     % Sum the matrix to see the 'most travelled paths'
     output = sum(mat_all,3);
+    
     % realign matrices
     output = output(2:end, 2:end-1);
     is_nan = find(isnan(swathAll_clip));
@@ -456,24 +457,29 @@ tId = [];
     % distance * 360 * number of start points sized matrix
     output_all(1:size(output,1),1:size(output,2),coord) = output;
 end
-
+% end
 
     %% Process results for plotting    
     
     %% Calculate the average and standard deviation for bins (stage 1)
-
-    all_probG = []; % extract the probability column of eaach table
+    
+if uncertainty == 1
+    
+    % extract the probability column of each table
+    all_probG = []; 
        for i = 1:length(xcells)
             act = T_all{i}.prob_G;
             all_probG = [all_probG, act];       
        end
      
     sumT = sum(all_probG,2)/length(xcells);
-
+    
+    % calculate SD
         for i = 1:size(all_probG,1)
-            stdev(i) = std(all_probG(i,:)); % calculate SD
+            stdev(i) = std(all_probG(i,:)); 
         end
-    SE = stdev/sqrt(length(xcells)); % convert std into standard error
+        % convert std into standard error
+    SE = stdev/sqrt(length(xcells)); 
 
     sumT = sum(all_probG,2)/length(xcells);
     
@@ -481,9 +487,10 @@ end
   %% Calculate the average and standard deviation for bins (stage 2)
  
     output_all(isnan(output_all))= 0;
+    
         % sum down cols to get a score per azimuth for each start point
-        
-        O = sum(output_all,3)/length(xcells); % sum in 3rd dimension to get average hits per cell
+        % sum in 3rd dimension to get average hits per cell
+        O = sum(output_all,3)/length(xcells); 
 
 
     sum_output_all = [];
@@ -505,15 +512,17 @@ end
         end
     end
 
- 
-av2 = mean(avHits_int,3); % find average per bin
+  % find average per bin
+av2 = mean(avHits_int,3);
 
-sq_avHits = squeeze(avHits_int); % find STD per bin
+  % find STD per bin
+sq_avHits = squeeze(avHits_int);
 std2 = std(sq_avHits,0,2);
 
-SE2 = std2/sqrt(length(xcells)); % convert std into standard error
+% convert std into standard error
+SE2 = std2/sqrt(length(xcells)); 
 
-
+end
     %% 3) Total elevation change over swath length 
     
     % For start point 1
@@ -548,7 +557,6 @@ T.color(T.isBelow) = 'g';
 T.color(T.isAbove) = 'r';
 
 
-
     %% Plotting
     
 figure(2)
@@ -573,7 +581,6 @@ hold on
 end
 edges = [(T.LL*pi/180); ((T.LL(end)+interp_to)*pi/180)]';
 p = polarhistogram('BinEdges',edges,'BinCounts',sumT, 'FaceColor','blue','FaceAlpha',.7);
-%title(sprintf('%s', 'Probability of travel direction'))
 set(gca, 'ThetaDir', 'clockwise', 'ThetaZeroLocation', 'top');
 thetaticklabels({'{\bf N}', 'NNE', 'NE', 'ENE', '{\bf E}', 'ESE', 'SE', 'SSE', '{\bf S}',...
     'SSW', 'SW', 'WSW', '{\bf W}', 'WNW', 'NW', 'NNW'})
@@ -595,18 +602,6 @@ rticklabels(all)
 set(gca, 'Color', 'None')
 
 subplot(2,3,3)
-%plot polar
-% p = polarhistogram('BinEdges',edges,'BinCounts',av2, 'FaceColor','blue','FaceAlpha',.7);
-% set(gca, 'ThetaDir', 'clockwise', 'ThetaZeroLocation', 'top');
-% thetaticklabels({'{\bf N}', 'NNE', 'NE', 'ENE', '{\bf E}', 'ESE', 'SE', 'SSE', '{\bf S}',...
-%     'SSW', 'SW', 'WSW', '{\bf W}', 'WNW', 'NW', 'NNW'})
-% thetaticks([0:interp_to:swath_nb])
-% title('Path of steepest descent')
-% hold on
-% ang = T.mid.*pi/180;
-% polarwitherrorbar(ang,av2,SE2) % plot error bars on the data
-% set(gca, 'Color', 'None')
-
 % plot matrix
 O(find(O==0)) = NaN;
 pcolor(O)
@@ -634,16 +629,16 @@ text(20, double(elevStart+2),'Elevation of start point', 'color', 'r')
 set(gca, 'Color', 'none')
 X = X_all_clip(1:10,:);
 Y = Y_all_clip(1:10,:);
-set(gca, 'Position', [0.13,0.217336683417085,...
-    0.825555555555556,0.261306532663317])
+set(gca, 'Position', [0.13,0.217,...
+    0.825,0.261])
 set(gcf, 'Position', get(0, 'Screensize'));
 set(gca, 'Color', 'None')
 lim = ylim;
-set(figure(2), 'PaperType', 'A2', 'PaperOrientation', 'landscape')
-
-savefig(figure(2), sprintf('%s%s',volcano, 3))
-print(figure(2), '-dpdf', fullfile(sprintf('%s%s',volcano, 3)))
-
+set(figure(2), 'PaperType', 'A1', 'PaperOrientation', 'landscape')
+% 
+% savefig(figure(2), sprintf('%s/%s','Out', volcano))
+% print(figure(2), '-dpdf', fullfile(sprintf('%s/%s','Out', volcano)))
+% 
 figure(3)
 title('Path of steepest descent')
 O(:,swath_nb+1) = NaN; O(find(O==0)) = NaN;
@@ -669,46 +664,34 @@ end
 str = sprintf('%s', 'Saving figures, please wait...' ); 
     disp(str)
 
-%% Save figures and data
-if not(isfolder(sprintf('%s', volcano)))
-    mkdir(sprintf('%s', volcano))
+    
+    
+%% Save figures and workspace
+if not(isfolder(sprintf('%s/%s','Out', volcano)))
+    mkdir(sprintf('%s/%s','Out', volcano))
 end
 
-if not(isfolder(sprintf('%s/%d', volcano, 0)))
-    mkdir(sprintf('%s/%d', volcano, 0))
+if not(isfolder(sprintf('%s/%s/%d', 'Out', volcano, 0)))
+    mkdir(sprintf('%s/%s/%d', 'Out', volcano, 0))
 end
-
-%     if not(isfolder(sprintf('%s/%d', volcano, 1)))
-%     mkdir(sprintf('%s/%d', volcano, 1))
-%     save(sprintf('%s/%d/%s', volcano, 1, 'workspace'))
-%     savefig(figure(1), sprintf('%s/%d/%s%s', volcano, 1, volcano, '_ROI'))
-%     print(figure(1), '-dpdf', fullfile(sprintf('%s/%d/%s%s', volcano, 1, volcano, '_ROI')))
-%     savefig(figure(2), sprintf('%s/%d/%s',volcano, 1, volcano))
-%     print(figure(2), '-dpdf', fullfile(sprintf('%s/%d/%s',volcano, 1, volcano)))
-%     savefig(figure(3), sprintf('%s/%d/%s%s', volcano, 1, volcano, '_avHits'))
-%     print(figure(3), '-dpdf', fullfile(sprintf('%s/%d/%s%s', volcano, 1, volcano, '_avHits')))
-%     end
-
-% if (isfolder(sprintf('%s/%d', volcano, 1)))
-    runs = ls(volcano);
     
     
-    runs = dir(volcano);
-    r = struct2cell(runs);
-    r_temp = r(1,:);
-    r_db = str2double(r_temp);
-    maxr = max(r_db)
+runs = dir(sprintf('%s/%s', 'Out', volcano));
+r = struct2cell(runs);
+r_temp = r(1,:);
+r_db = str2double(r_temp);
+maxr = max(r_db);
     
-    mkdir(sprintf('%s/%d', volcano, maxr+1))
-    save(sprintf('%s/%d/%s', volcano, maxr+1, 'workspace'))
-    savefig(figure(1), sprintf('%s/%d/%s%s', volcano, maxr+1, volcano, '_ROI'))
-    print(figure(1), '-dpdf', fullfile(sprintf('%s/%d/%s%s', volcano, maxr+1, volcano, '_ROI')))
-    savefig(figure(2), sprintf('%s/%d/%s',volcano, maxr+1, volcano))
-    print(figure(2), '-dpdf', fullfile(sprintf('%s/%d/%s',volcano, maxr+1, volcano)))
-    savefig(figure(3), sprintf('%s/%d/%s%s', volcano, maxr+1, volcano, '_avHits'))
-    print(figure(3), '-dpdf', fullfile(sprintf('%s/%d/%s%s', volcano, maxr+1, volcano, '_avHits')))
+    mkdir(sprintf('%s/%s/%d', 'Out', volcano, maxr+1))
+    
+    save(sprintf('%s/%s/%d/%s', 'Out', volcano, maxr+1, 'workspace'))
+    savefig(figure(1), sprintf('%s/%s/%d/%s%s', 'Out',volcano, maxr+1, volcano, '_roi'))
+    print(figure(1), '-dpdf', fullfile(sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_roi')))
+    savefig(figure(2), sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano))
+    print(figure(2), '-dpdf', fullfile(sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano)))
+    savefig(figure(3), sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar'))
+    print(figure(3), '-dpdf', fullfile(sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar')))
 
-% end
 
 str = sprintf('%s', 'Done!' ); 
     disp(str)

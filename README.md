@@ -1,6 +1,6 @@
 ## FlowDir 2021
 
-*Elly Tennant, Susanna Jenkins, Sebastian Biass*
+*Eleanor Tennant, Susanna Jenkins, Sebastien Biass*
 
 * FlowDir is a MATLAB tool developed for forecasting the travel directions of effusive volcanic hazards (lava flows and block and ash flows). 
 * FlowDir is based upon a simple topography analysis and is not a physical model
