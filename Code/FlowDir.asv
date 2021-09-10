@@ -9,7 +9,7 @@ warning('off','all')
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
     'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
 dlgtitle = 'FlowDir inputs'; dims = [1 50];
-definput = {'Colima','Colima.tif','500', '50','50', '200', '0', '30'};
+definput = {'Colima','Colima.tif','500', '50','50', '200', '1', '30'};
 
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
 volcano = inputs{1};
@@ -216,8 +216,11 @@ for coord = 1:length(xcells) % for all start points
             yline(elevStart, 'r--')
             text(20, double(elevStart+2),'Elevation of start point', 'color', 'r')
             set(gca, 'Color', 'none')
+%             X = X_all_clip(1:10,:);
+%             Y = Y_all_clip(1:10,:);
             set(gca, 'Position', [0.13,0.2173,0.8255,0.2613])
             set(gcf, 'Position', get(0, 'Screensize'));
+%             lim = ylim;
 
         end
         
@@ -276,6 +279,24 @@ for coord = 1:length(xcells) % for all start points
     
     t0 = T; 
     T_all{coord} = t0; % One table is generated per start point
+    
+%      %% Calculate the average and standard deviation for bins (stage 1)
+%     % extract the probability column of each table
+%     all_probG = []; 
+%        for i = 1:length(xcells)
+%             act = T_all{i}.prob_G;
+%             all_probG = [all_probG, act];       
+%        end
+%      
+%     sumT = sum(all_probG,2)/length(xcells);
+%     
+%     % calculate SD
+%         for i = 1:size(all_probG,1)
+%             stdev(i) = std(all_probG(i,:)); 
+%         end
+%         % convert std into standard error
+%     SE = stdev/sqrt(length(xcells)); 
+
 
     
         %% 2) Path of steepest descent
@@ -563,7 +584,7 @@ t1 = title(sprintf('%s', volcano), 'fontsize', 18);
 t1.Position(2) = t1.Position(2)+1e2;
 set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14)
 
-
+subplot(2,3,2)
 subplot(2,3,2);
 for i = 1:length(T.elevChange)
     color = T.color(i);
@@ -571,7 +592,7 @@ polarscatter(T.mid(i)*pi/180,  max(T.prob_G)+1, 'd', color , 'filled')
 hold on
 end
 edges = [(T.LL*pi/180); ((T.LL(end)+interp_to)*pi/180)]';
-polarhistogram('BinEdges',edges,'BinCounts',sumT, 'FaceColor','blue','FaceAlpha',.7);
+p = polarhistogram('BinEdges',edges,'BinCounts',sumT, 'FaceColor','blue','FaceAlpha',.7);
 set(gca, 'ThetaDir', 'clockwise', 'ThetaZeroLocation', 'top');
 thetaticklabels({'{\bf N}', 'NNE', 'NE', 'ENE', '{\bf E}', 'ESE', 'SE', 'SSE', '{\bf S}',...
     'SSW', 'SW', 'WSW', '{\bf W}', 'WNW', 'NW', 'NNW'})
@@ -619,10 +640,13 @@ elevStart = swathAll(1,1);
 yline(elevStart, 'r--')
 text(20, double(elevStart+2),'Elevation of start point', 'color', 'r')
 set(gca, 'Color', 'none')
+X = X_all_clip(1:10,:);
+Y = Y_all_clip(1:10,:);
 set(gca, 'Position', [0.13,0.217,...
     0.825,0.261])
 set(gcf, 'Position', get(0, 'Screensize'));
 set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14);
+lim = ylim;
 set(figure(2), 'PaperType', 'A1', 'PaperOrientation', 'landscape')
 
 figure(3)
@@ -630,10 +654,11 @@ title('Path of steepest descent')
 O(:,swath_nb+1) = NaN; O(O==0) = NaN;
 R = (1:(size(O,1))); % number of rows in output
 Az = (0:swath_nb);
+N = 360;
 temp = round(DEM.cellsize*(linspace(1,size(O, 1), size(O, 1))));
 temp = round(temp - DEM.cellsize);
 Rticks = string(temp);
-polarPcolor(R,Az,O, 'colormap', 'jet','Nspokes',17, 'Ncircles',size(O, 1),...
+pl = polarPcolor(R,Az,O, 'colormap', 'jet','Nspokes',17, 'Ncircles',size(O, 1),...
     'autoOrigin','off', 'RtickLabel', Rticks);
 col4 = colorbar;
 col4.Location = 'eastOutside';
