@@ -1,4 +1,4 @@
-## FlowDir 2021
+## FlowDir (2.0) 2021
 *Elly Tennant, Susanna Jenkins, Sebastien Biass*
 
 FlowDir is a MATLAB tool for forecasting the travel directions of effusive volcanic hazards (lava flows and block and ash flows). This page is meant as a quick start guide, for more information and an understanding of how FlowDir works please refer to Tennant et al., (...). FlowDir was written using MATLAB 2021a. Before starting ensure that you have the following MATLAB toolboxes installed: mapping; image processing, parallel computing.
@@ -11,16 +11,18 @@ FlowDir is a MATLAB tool for forecasting the travel directions of effusive volca
 ```
 FlowDir
    ├── Code
-   |	 ├── FlowDir.m
+   |	 └── FlowDir.m
    ├── DEMs
-   |	 ├── Merapi.tif
+   |	 └── Merapi.tif
    ├── Dependancies
    |	 ├── topotoolbox-master
    |	 ├── invprctile.m
    |	 ├── polarwitherrorbar.m
-   |	 ├── polarPcolor.m
+   |	 └── polarPcolor.m
    └── Out
-         └── Merapi
+         └── Shinmoedake
+         			├── 0
+         			└── 1
 ```
 
 <li>Type `FlowDir` into the MATLAB command window and the following GUI will pop up:
@@ -48,15 +50,15 @@ The new zoomed in DEM is then plotted and you can click to define the start poin
 <li> Congratulations FlowDir is now running, its progress is stated as below:
 
 ```Running FlowDir, please wait...
-Start point # [1/17]
-Start point # [2/17]
-Start point # [3/17]
-Start point # [4/17]
+Start point # [1/17] ...
+Start point # [2/17] ...
+Start point # [3/17] ...
+Start point # [4/17] ...
 ...
 Finished
 ```
 
-<li> When FlowDir is finished, all of the figures along with the workspace containing all variables, will be saved into the `out/Volcano Name` folder.
+<li> When FlowDir is finished, all of the figures along with the workspace containing all variables, will be saved into the `out/VolcanoName/X` folder.
 
 <br/>
 <img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_ex.png" width="800">

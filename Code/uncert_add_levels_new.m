@@ -1,4 +1,4 @@
-clear all, close all, clc;
+clear all close all  clc;
 
 tic
 warning('off','all')
@@ -8,7 +8,7 @@ warning('off','all')
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
     'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
 dlgtitle = 'FlowDir inputs'; dims = [1 50];
-definput = {'Shinmoedake','Shinmoedake_2016_5m_clip.tif','800', '150','30', '100', '0', '5'};
+definput = {'Merapi','Merapi_2015.tif','800', '50','30', '200', '0', '5'};
 
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
 volcano = inputs{1};
@@ -22,7 +22,7 @@ noCells = str2double(inputs(8));
 swath_nb = 360;
 
 DEM = GRIDobj(dem); 
-waitfor(msgbox('Draw polygon to clip DEM, double click when finished'))
+waitfor(msgbox('Plotting DEM...draw a polygon to clip, double click inside when finished'))
 MASK = createmask(DEM, 'usehillshade'); 
 DEMc = crop(DEM,MASK,NaN);
 
@@ -60,7 +60,10 @@ ycells = linspace(min(polyout.Vertices(:,2)),max(polyout.Vertices(:,2)),...
 
 [XCELLS, YCELLS] = meshgrid(xcells,ycells); 
 xcells = XCELLS(:); ycells = YCELLS(:);
+
+if uncertainty == 1
 scatter(xcells, ycells, 'rx')
+end
 
 xcells = [craterX_temp; xcells]; ycells = [craterY_temp; ycells];
 
@@ -69,23 +72,21 @@ T_all = cell(length(xcells),1);
 
 figure(2)
 set(gcf, 'visible','off')
-sub1 = subplot(2,3,1);
-imageschs(DEMc);
-hold on
-sub_3 = subplot(2,3,4:6);
+sub3 = subplot(2,3,4:6);
 
-str = sprintf('%s', 'Running FlowDir, please wait...' ); disp(str)
+fprintf('%s\n', 'Running FlowDir, please wait...' );
 
     %% Calculate for each of the start points
-% if uncertainty == 0
-%     xcells = xcells(1); ycells = ycells(1);
-% else
-%     disp('Running with uncertainty on start')
+if uncertainty == 0
+    xcells = xcells(1); ycells = ycells(1);
+else
+    disp('Running with uncertainty on start point')
+end
     
 for coord = 1:length(xcells) % for all start points
     
-    str = sprintf('%s[%d%s%d]', 'Start point # ', coord, '/', length(xcells)); 
-    disp(str)
+    fprintf('%s[%d%s%d]%s\n', 'Start point # ', coord, '/', length(xcells), '...'); 
+ 
     
     craterX = xcells(coord); craterY = ycells(coord);
 
@@ -128,7 +129,7 @@ for coord = 1:length(xcells) % for all start points
     
         % DEM quality check: find values where elevation is <=0
         checkElev = find(Z<=0);
-            if isempty(checkElev)== 0;
+            if isempty(checkElev)== 0
                 waitfor(msgbox('Swaths exist with elevation values <= 0 m, check the DEM', 'Error', 'error'));
                 error('Swaths exist with elevation values <= 0 m, check the DEM');
             end
@@ -205,7 +206,7 @@ for coord = 1:length(xcells) % for all start points
         end
     
         if coord == 1 % Plot the first profile (using the selected start point)
-            plot(sub_3,[1:360],elev_all, 'k')
+            plot(sub3,(1:360),elev_all, 'k')
             xlim([0, swath_nb])
             xlabel('Azimuth')
             ylabel('Crater elevation (m)')
@@ -225,9 +226,6 @@ for coord = 1:length(xcells) % for all start points
     figure(1)
     plot(x_all, y_all, 'k')
 
-    figure(2)
-    plot(sub1, x_all, y_all, 'k')
-    
         %% 1) Linear elevation gradient
 
     swathAll_clip(swathAll_clip==0)= NaN;
@@ -245,8 +243,6 @@ for coord = 1:length(xcells) % for all start points
     sumAllG = cumsum(gradZn,1); % Cumulative sum of gradient
     sumAllG(isnan(sumAllG))= 0; 
     sumAllG( ~any(sumAllG,2), : ) = [];
-
-    sumCountG = zeros(1,length(sumAllG)); 
     sumCountG = sum(sumAllG, 1); 
 
         
@@ -287,13 +283,13 @@ for coord = 1:length(xcells) % for all start points
         
     swathAll_clip( ~any(swathAll_clip,2), : ) = [];
 
-    [s1 s2] = size(swathAll_clip);
+    [s1, sub2] = size(swathAll_clip);
     
     % create empty matrix a bit bigger than swathAll
-    mat = zeros(s1+1, s2+2); 
+    mat = zeros(s1+1, sub2+2); 
 
     % Pad out matrix so that the calculation cant go backwards
-    mat(1,:) = 10000; mat(:,1) = 10000; mat(:,s2+2) = 10000;
+    mat(1,:) = 10000; mat(:,1) = 10000; mat(:,sub2+2) = 10000;
     mat(2:end, 2:end-1) = swathAll_clip;
     mat_all = [];
 
@@ -405,13 +401,13 @@ tId = [];
         
     % Use the one with the highest row id (further from the crater)   
     if max(S_surround.idI_surround(r)) > min(S_surround.idI_surround(r))
-     [maxI idmaxI] = max(S_surround.idI_surround(r));
+     [maxI, idmaxI] = max(S_surround.idI_surround(r));
      iL = S_surround.idI_surround(idmaxI);
      jL = S_surround.idJ_surround(idmaxI);
          
         % if the row ids are the same, turn to the column     
         elseif max(S_surround.idI_surround(r)) == min(S_surround.idI_surround(r))
-            [maxJ idmaxJ] = max(S_surround.idJ_surround(r));
+            [maxJ, idmaxJ] = max(S_surround.idJ_surround(r));
             jL = S_surround.idJ_surround(idmaxJ);
             iL = S_surround.idI_surround(idmaxJ);
     end
@@ -442,9 +438,7 @@ tId = [];
 
  
     mat_all(:,:,j) = new_mat; % add the new matrix
-        end
-    
-    output = [];
+end
     
     % Sum the matrix to see the 'most travelled paths'
     output = sum(mat_all,3);
@@ -457,14 +451,12 @@ tId = [];
     % distance * 360 * number of start points sized matrix
     output_all(1:size(output,1),1:size(output,2),coord) = output;
 end
-% end
 
-    %% Process results for plotting    
+
+    %% Process results for plotting  
     
     %% Calculate the average and standard deviation for bins (stage 1)
-    
-if uncertainty == 1
-    
+
     % extract the probability column of each table
     all_probG = []; 
        for i = 1:length(xcells)
@@ -481,18 +473,14 @@ if uncertainty == 1
         % convert std into standard error
     SE = stdev/sqrt(length(xcells)); 
 
-    sumT = sum(all_probG,2)/length(xcells);
-    
     
   %% Calculate the average and standard deviation for bins (stage 2)
- 
     output_all(isnan(output_all))= 0;
     
         % sum down cols to get a score per azimuth for each start point
         % sum in 3rd dimension to get average hits per cell
         O = sum(output_all,3)/length(xcells); 
-
-
+        
     sum_output_all = [];
         for j = 1:length(xcells)
         sum_output_all(:,:,j) = sum(output_all(:,:,j),1);
@@ -522,7 +510,8 @@ std2 = std(sq_avHits,0,2);
 % convert std into standard error
 SE2 = std2/sqrt(length(xcells)); 
 
-end
+
+    
     %% 3) Total elevation change over swath length 
     
     % For start point 1
@@ -541,7 +530,7 @@ sumDif = sum(Dif, 1);
 Mall = [];
 swathSizeIntAll = [];
 
-for m = [1:interp_to:swath_nb];
+for m = (1:interp_to:swath_nb)
 M = mean(sumDif(m:(m+(interp_to-1))));
 swathSizeInt = mean(swathSize(m:round(m+(interp_to-1))));
 swathSizeIntAll = [swathSizeIntAll,swathSizeInt]; % interpolate swath size from 360 to 36
@@ -557,23 +546,23 @@ T.color(T.isBelow) = 'g';
 T.color(T.isAbove) = 'r';
 
 
-    %% Plotting
+    %% ########################### Plotting ###########################
     
 figure(2)
 sub1 = subplot(2,3,1);
-imageschs(DEMc); 
+imageschs(DEMc), colormap(sub1, parula); 
 hold on; plot(S, 'b'); scatter(xcells, ycells, 'rx')
 plot(x_all, y_all, 'k')
 xlabel('East')
 ylabel('North')
-c = colorbar;
-ylabel(c, 'Elevation (m)')
+col2 = colorbar; col2.Limits(2) = max(max(DEMc.Z));
+ylabel(col2, 'Elevation (m)')
 t1 = title(sprintf('%s', volcano), 'fontsize', 18);
 t1.Position(2) = t1.Position(2)+1e2;
-set(gca, 'Color', 'None')
+set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14)
 
 subplot(2,3,2)
-s2 = subplot(2,3,2);
+sub2 = subplot(2,3,2);
 for i = 1:length(T.elevChange)
     color = T.color(i);
 polarscatter(T.mid(i)*pi/180,  max(T.prob_G)+1, 'd', color , 'filled')
@@ -584,42 +573,43 @@ p = polarhistogram('BinEdges',edges,'BinCounts',sumT, 'FaceColor','blue','FaceAl
 set(gca, 'ThetaDir', 'clockwise', 'ThetaZeroLocation', 'top');
 thetaticklabels({'{\bf N}', 'NNE', 'NE', 'ENE', '{\bf E}', 'ESE', 'SE', 'SSE', '{\bf S}',...
     'SSW', 'SW', 'WSW', '{\bf W}', 'WNW', 'NW', 'NNW'})
-thetaticks([0:interp_to:swath_nb])
+thetaticks(0:interp_to:swath_nb)
 title('Linear elevation gradient')
 hold on
 ang = T.mid.*pi/180;
 polarwitherrorbar(ang,sumT,SE') % plot error bars on the data
+set(gca, 'Fontsize', 14)
 
 all = [];
 rtl = rticklabels;
 for r = 1:length(rtl)
     tmp = rtl{r};
     new_rtl = sprintf('%s%s', tmp, '%');
-all = strvcat(all, new_rtl);
+all = char(all, new_rtl);
 end
 hold on
 rticklabels(all)
 set(gca, 'Color', 'None')
 
 subplot(2,3,3)
+sub3 = subplot(2,3,3);
 % plot matrix
-O(find(O==0)) = NaN;
+O(O==0) = NaN;
 pcolor(O)
 shading('flat')
-colormap(jet)
-c = colorbar;
-ylabel(c, 'Number of hits')
+colormap(sub3, jet)
+col3 = colorbar;
+ylabel(col3, 'Number of hits')
 xlabel('Azimuth ({\circ})')
 ylabel('Distance (m)')
 ticks=get(gca,'YTickLabels');%retrieve current ticks
-ticks=round(str2double(ticks)*DEM.cellsize); ticks = round(ticks-DEM.cellsize);%multiply
+ticks=round(str2double(ticks)*DEM.cellsize); ticks = round(ticks-DEM.cellsize);
 set(gca,'YTickLabels',ticks)
 title('Path of steepest descent')
-set(gca, 'Color', 'None')
-
+set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14);
 
 subplot(2,3,4:6)
-plot([1:360],elev_all, 'k')
+plot((1:360),elev_all, 'k')
 xlim([0, swath_nb])
 xlabel('Azimuth ({\circ})')
 ylabel('Crater elevation (m)')
@@ -632,27 +622,24 @@ Y = Y_all_clip(1:10,:);
 set(gca, 'Position', [0.13,0.217,...
     0.825,0.261])
 set(gcf, 'Position', get(0, 'Screensize'));
-set(gca, 'Color', 'None')
+set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14);
 lim = ylim;
 set(figure(2), 'PaperType', 'A1', 'PaperOrientation', 'landscape')
-% 
-% savefig(figure(2), sprintf('%s/%s','Out', volcano))
-% print(figure(2), '-dpdf', fullfile(sprintf('%s/%s','Out', volcano)))
-% 
+
 figure(3)
 title('Path of steepest descent')
-O(:,swath_nb+1) = NaN; O(find(O==0)) = NaN;
-R = [1:(size(O,1))]; % number of rows in output
-Az = [0:swath_nb];
+O(:,swath_nb+1) = NaN; O(O==0) = NaN;
+R = (1:(size(O,1))); % number of rows in output
+Az = (0:swath_nb);
 N = 360;
 temp = round(DEM.cellsize*(linspace(1,size(O, 1), size(O, 1))));
 temp = round(temp - DEM.cellsize);
 Rticks = string(temp);
 pl = polarPcolor(R,Az,O, 'colormap', 'jet','Nspokes',17, 'Ncircles',size(O, 1),...
     'autoOrigin','off', 'RtickLabel', Rticks);
-col = colorbar;
-col.Location = 'eastOutside';
-ylabel(col, 'Average number of hits')
+col4 = colorbar;
+col4.Location = 'eastOutside';
+ylabel(col4, 'Average number of hits')
 t_tmp = get(gca, 'children');
 t = findobj(t_tmp, 'type', 'text');
 lab = {'NNW', 'NW','WNW','{\bf W}','WSW','SW','SSW','{\bf S}', 'SSE','SE','ESE','{\bf E}',...
@@ -661,12 +648,9 @@ for i = 1:numel(lab)
     set(t(i), 'String', lab(i))
 end
 
-str = sprintf('%s', 'Saving figures, please wait...' ); 
-    disp(str)
-
+fprintf('%s\n', 'Saving figures...' ); 
     
-    
-%% Save figures and workspace
+% Save figures and workspace
 if not(isfolder(sprintf('%s/%s','Out', volcano)))
     mkdir(sprintf('%s/%s','Out', volcano))
 end
@@ -674,7 +658,6 @@ end
 if not(isfolder(sprintf('%s/%s/%d', 'Out', volcano, 0)))
     mkdir(sprintf('%s/%s/%d', 'Out', volcano, 0))
 end
-    
     
 runs = dir(sprintf('%s/%s', 'Out', volcano));
 r = struct2cell(runs);
@@ -691,16 +674,11 @@ maxr = max(r_db);
     print(figure(2), '-dpdf', fullfile(sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano)))
     savefig(figure(3), sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar'))
     print(figure(3), '-dpdf', fullfile(sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar')))
+    
+delete Table_strt_1.mat;
 
-
-str = sprintf('%s', 'Done!' ); 
+str = sprintf('%s', 'Finished!' ); 
     disp(str)
-
-toc
-
-
-
-
 
 
 
