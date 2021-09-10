@@ -21,11 +21,11 @@ FlowDir
    |	 └── polarPcolor.m
    └── Out
          └── Shinmoedake
-         			├── 0
-         			└── 1
+         		├── 0
+         		└── 1
 ```
 
-<li>Type `FlowDir` into the MATLAB command window and the following GUI will pop up:
+<li> Type `FlowDir` into the MATLAB command window and the following GUI will pop up:
 <br/>
 
 <center><img src="https://github.com/EllyTennant/FlowDir/blob/main/images/GUI.png" width="250"></center>
