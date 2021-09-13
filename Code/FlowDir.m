@@ -1,6 +1,6 @@
 function [] = FlowDir
 clear all, close all,  clc;
- % test changes
+
 tic
 warning('off','all')
 
@@ -9,7 +9,7 @@ warning('off','all')
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
     'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
 dlgtitle = 'FlowDir inputs'; dims = [1 50];
-definput = {'Colima','Colima.tif','500', '50','50', '200', '0', '30'};
+definput = {'Colima','Colima.tif','500', '50','50', '100', '0', '30'};
 
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
 volcano = inputs{1};
@@ -582,12 +582,12 @@ ang = T.mid.*pi/180;
 polarwitherrorbar(ang,sumT,SE') % plot error bars on the data
 set(gca, 'Fontsize', 14)
 
-all = [];
+all = {};
 rtl = rticklabels;
 for r = 1:length(rtl)
     tmp = rtl{r};
     new_rtl = sprintf('%s%s', tmp, '%');
-all = char(all, new_rtl);
+all{r} = new_rtl;
 end
 hold on
 rticklabels(all)
