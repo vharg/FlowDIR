@@ -1,7 +1,7 @@
-## FlowDir (2.0) 2021
+## FlowDIR 2021
 *Elly Tennant, Susanna Jenkins, Sebastien Biass*
 
-FlowDir is a MATLAB tool for forecasting the travel directions of effusive volcanic hazards (lava flows and block and ash flows). This page is meant as a quick start guide, for more information and an understanding of how FlowDir works please refer to Tennant et al., (...). FlowDir was written using MATLAB 2021a. Before starting ensure that you have the following MATLAB toolboxes installed: mapping; image processing, parallel computing.
+FlowDIR is a MATLAB tool for forecasting the travel directions of effusive volcanic hazards (lava flows and block and ash flows). This page is meant as a quick start guide, for more information and an understanding of how FlowDIR works please refer to Tennant et al., (...). FlowDIR was written using MATLAB 2021a. Before starting ensure that you have the following MATLAB toolboxes installed: mapping; image processing, parallel computing.
 
 ### Getting started
 
@@ -58,7 +58,7 @@ Start point # [4/17] ...
 Finished
 ```
 
-<li> When FlowDir is finished, all of the figures along with the workspace containing all variables, will be saved into the `out/VolcanoName/X` folder.
+<li> When FlowDIR is finished, all of the figures along with the workspace containing all variables, will be saved into the `out/VolcanoName/X` folder.
 
 <br/>
 <img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_ex.png" width="800">

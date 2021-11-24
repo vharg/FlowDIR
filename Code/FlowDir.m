@@ -9,7 +9,7 @@ warning('off','all')
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
     'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
 dlgtitle = 'FlowDir inputs'; dims = [1 50];
-definput = {'Colima','Colima.tif','500', '50','50', '100', '0', '30'};
+definput = {'Merapi','Merapi_5m.tif','800', '50','20', '500', '0', '10'};
 
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
 volcano = inputs{1};
@@ -40,10 +40,10 @@ FD = FLOWobj(DEMc);
 % A  = flowacc(FD);
 S = STREAMobj(FD, flowacc(FD)>100); % Use low threshold to define streams
 plot(S,'b')
-waitfor(msgbox('Click again for start point'))
-[craterX_temp, craterY_temp] = ginput(1);
-% craterX_temp = [438896.5004];
-% craterY_temp = [9166379.859];
+%waitfor(msgbox('Click again for start point'))
+%[craterX_temp, craterY_temp] = ginput(1);
+craterX_temp = [438872.7664];
+craterY_temp = [9166384.372];
 hold on, scatter(craterX_temp, craterY_temp, 'rx')
 xlabel('East'); ylabel('North');
 
@@ -482,34 +482,34 @@ end
         % sum in 3rd dimension to get average hits per cell
         O = sum(output_all,3)/length(xcells); 
         
-%     sum_output_all = zeros(1,360,length(xcells));
-%         for j = 1:length(xcells)
-%         sum_output_all(:,:,j) = sum(output_all(:,:,j),1);
-%         end 
-% 
-%     avHits = sum_output_all/length(xcells); % this is the average
-% 
-%         % Bin avHits for sub-cardinal directions
-%     for i = 1:length(LL)
-%         for j = 1:length(xcells)
-%         avHits_temp = avHits(:,:,j);
-%         avHits_int(i,:,j) = mean(avHits_temp(LL(i):UL(i)));
-%         % Wrap around bin edges
-%         if LL(i) > UL(i)
-%             avHits_int(i,:,j) = mean([avHits_temp(LL(i):end), avHits_temp(1:UL(i))]);
-%         end    
-%         end
-%     end
-% 
-%   % find average per bin
-% av2 = mean(avHits_int,3);
-% 
-%   % find STD per bin
-% sq_avHits = squeeze(avHits_int);
-% std2 = std(sq_avHits,0,2);
-% 
-% % convert std into standard error
-% SE2 = std2/sqrt(length(xcells)); 
+    sum_output_all = zeros(1,360,length(xcells));
+        for j = 1:length(xcells)
+        sum_output_all(:,:,j) = sum(output_all(:,:,j),1);
+        end 
+
+    avHits = sum_output_all/length(xcells); % this is the average
+
+        % Bin avHits for sub-cardinal directions
+    for i = 1:length(LL)
+        for j = 1:length(xcells)
+        avHits_temp = avHits(:,:,j);
+        avHits_int(i,:,j) = mean(avHits_temp(LL(i):UL(i)));
+        % Wrap around bin edges
+        if LL(i) > UL(i)
+            avHits_int(i,:,j) = mean([avHits_temp(LL(i):end), avHits_temp(1:UL(i))]);
+        end    
+        end
+    end
+
+  % find average per bin
+av2 = mean(avHits_int,3);
+
+  % find STD per bin
+sq_avHits = squeeze(avHits_int);
+std2 = std(sq_avHits,0,2);
+
+% convert std into standard error
+SE2 = std2/sqrt(length(xcells)); 
 
 
     
@@ -665,14 +665,17 @@ maxr = max(r_db);
     
     mkdir(sprintf('%s/%s/%d', 'Out', volcano, maxr+1))
     
-    save(sprintf('%s/%s/%d/%s', 'Out', volcano, maxr+1, 'workspace'))
+    
     savefig(figure(1), sprintf('%s/%s/%d/%s%s', 'Out',volcano, maxr+1, volcano, '_roi'))
     print(figure(1), '-dpdf', fullfile(sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_roi')))
     savefig(figure(2), sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano))
     print(figure(2), '-dpdf', fullfile(sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano)))
     savefig(figure(3), sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar'))
     print(figure(3), '-dpdf', fullfile(sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar')))
-    
+   time = toc
+    save(sprintf('%s/%s/%d/%s', 'Out', volcano, maxr+1, 'workspace'))
+    save('workspace')
+
 delete Table_strt_1.mat;
 
 fprintf('%s\n', 'Finished!' ); 
