@@ -1,17 +1,20 @@
-function [] = FlowDir
-clear all, close all,  clc;
+function [] = FlowDir(volcano, dem, defaultSW, craterX_temp, craterY_temp, buff, Thr, steps, uncertainty, noCells, varargin)
+
+%fprintf('%s%d\n', 'Number of arguments = ', nargin);
 
 tic
 warning('off','all')
 
     %% Set up input dialogue
     
+if nargin == 0 %(Interactive mode with GUIs)
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
     'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
 dlgtitle = 'FlowDir inputs'; dims = [1 50];
-definput = {'Merapi','Merapi_5m.tif','800', '50','20', '500', '0', '10'};
-
+definput = {'Shinmoedake','Shinmoedake_2016_15m_clip.tif','800', '50','20', '500', '1', '15'};
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
+    
+    
 volcano = inputs{1};
 dem = inputs{2};
 defaultSW = str2double(inputs(3));
@@ -20,37 +23,43 @@ Thr = str2double(inputs(5));
 steps = str2double(inputs(6));
 uncertainty = str2double(inputs(7));
 noCells = str2double(inputs(8));
+
+end
+ 
 swath_nb = 360;
-
-DEM = GRIDobj(dem); 
-waitfor(msgbox('Plotting DEM...draw a polygon to clip, double click inside when finished'))
-MASK = createmask(DEM, 'usehillshade'); 
-DEMc = crop(DEM,MASK,NaN);
-
-% Set the number of degrees to interpolate azimuths to
+% Set the binwidth (number of degrees) to interpolate azimuths to. 22.5 is
+% the default and is centered on north
 interp_to = 22.5; 
 swL = defaultSW;
 
+DEM = GRIDobj(dem); 
+FD = FLOWobj(DEM);
+S = STREAMobj(FD, flowacc(FD)>100); % Use low threshold to define streams
+
+if nargin == 0 %(Interactive mode with GUIs)
+waitfor(msgbox('Plotting DEM...draw a polygon to clip, double click inside when finished'))
+MASK = createmask(DEM, 'usehillshade'); % option to clip the DEM
+DEM = crop(DEM,MASK,NaN);
+title('Click +/- to zoom in/out')
+waitfor(msgbox('Click again for start point'))
+[craterX_temp, craterY_temp] = ginput(1);
+end
     %% Plot DEM and select start point
     
-figure(1)
-title('Click +/- to zoom in/out')
-imageschs(DEMc); colormap(parula); xlabel('East'); ylabel('North'); hold on
-FD = FLOWobj(DEMc);
-% A  = flowacc(FD);
-S = STREAMobj(FD, flowacc(FD)>100); % Use low threshold to define streams
-plot(S,'b')
-%waitfor(msgbox('Click again for start point'))
-%[craterX_temp, craterY_temp] = ginput(1);
-craterX_temp = [438872.7664];
-craterY_temp = [9166384.372];
-hold on, scatter(craterX_temp, craterY_temp, 'rx')
-xlabel('East'); ylabel('North');
+% figure(1)
+% 
+% imageschs(DEM); colormap(parula); xlabel('East'); ylabel('North'); hold on
+% 
+% plot(S,'b')
+% 
+% hold on, scatter(craterX_temp, craterY_temp, 'rx')
+% xlabel('East'); ylabel('North');
 
 
-    %% Get coords of start points used for start point uncertainty
+    %% Generate initialisation polygon
     
-% Generate a polygon buffer around the start point and get the startpoints within
+% Generate a polygon buffer around the start point and get the startpoints
+% within the polygon
 polyout = polybuffer([craterX_temp craterY_temp],'lines',noCells,'JointType','square'); 
 
 xcells = linspace(min(polyout.Vertices(:,1)),max(polyout.Vertices(:,1)),...
@@ -61,35 +70,40 @@ ycells = linspace(min(polyout.Vertices(:,2)),max(polyout.Vertices(:,2)),...
 
 [XCELLS, YCELLS] = meshgrid(xcells,ycells); 
 xcells = XCELLS(:); ycells = YCELLS(:);
-
-if uncertainty == 1
-scatter(xcells, ycells, 'rx')
-end
+% 
+% if uncertainty == 1
+% scatter(xcells, ycells, 'rx')
+% end
 
 xcells = [craterX_temp; xcells]; ycells = [craterY_temp; ycells];
 
-% space to store tables output for each point in stage 1.
+% Setup storage space to store tables output for each point in stage 1.
 T_all = cell(length(xcells),1); 
 
-figure(2)
-set(gcf, 'visible','off')
-sub3 = subplot(2,3,4:6);
+% figure(2)
+% %set(gcf, 'visible','off')
+% sub3 = subplot(2,3,4:6);
 
 fprintf('%s\n', 'Running FlowDir, please wait...' );
 
+% Get the coordinates of the cells that are on the boundary of the polygon
+% (only the boundary cells are used when ucertainty = 0, when uncertainty = 1, all cells within the polygon are used as start points)
+[~,on] = inpolygon(xcells,ycells,polyout.Vertices(:,1),polyout.Vertices(:,2));
+
+
     %% Perform FlowDir calculation for each of the start points
- % If uncertainty is not to be included use only the first start point
+ % If uncertainty = 0 use only the input start point
+ % and those on the boundary of the polygon.
 if uncertainty == 0 
-    xcells = xcells(1); ycells = ycells(1);
+    xcells = [xcells(1); xcells(on)]; ycells = [ycells(1); ycells(on)];
 else
     disp('Running with uncertainty on start point')
 end
-    
+  % If uncertainty = 1, use all cells inside and on the polygon  
 for coord = 1:length(xcells) % for all start points
     
     fprintf('%s[%d%s%d]%s\n', 'Start point # ', coord, '/', length(xcells), '...'); 
- 
-    
+  
     craterX = xcells(coord); craterY = ycells(coord);
 
     % Setup swaths radiating from start point, each swath will have 2 pixels width.
@@ -207,23 +221,24 @@ for coord = 1:length(xcells) % for all start points
             elev_all(i) = swathAll_clip(id_clip,i);
         end
     
-        if coord == 1 % Plot the first profile (using the selected start point)
-            plot(sub3,(1:360),elev_all, 'k')
-            xlim([0, swath_nb])
-            xlabel('Azimuth')
-            ylabel('Crater elevation (m)')
-            elevStart = swathAll(1,1);
-            yline(elevStart, 'r--')
-            text(20, double(elevStart+2),'Elevation of start point', 'color', 'r')
-            set(gca, 'Color', 'none')
-            set(gca, 'Position', [0.13,0.2173,0.8255,0.2613])
-            set(gcf, 'Position', get(0, 'Screensize'));
+%         if coord == 1 % Plot the first profile (using the selected start point)
+%             plot(sub3,(1:360),elev_all, 'k')
+%             xlim([0, swath_nb])
+%             xlabel('Azimuth')
+%             ylabel('Crater elevation (m)')
+%             elevStart = swathAll(1,1);
+%             yline(elevStart, 'r--')
+%             text(20, double(elevStart+2),'Elevation of start point', 'color', 'r')
+%             set(gca, 'Color', 'none')
+%             set(gca, 'Position', [0.13,0.2173,0.8255,0.2613])
+%             set(gcf, 'Position', get(0, 'Screensize'));
 
-        end
+%        end
         
     hold on,
-    figure(1)
-    plot(x_all, y_all, 'k')
+%     figure(1)
+%     imageschs(DEM); colormap(parula); xlabel('East'); ylabel('North'); hold on
+%     plot(x_all, y_all, 'k')
 
         %% 1) Linear elevation gradient
 
@@ -257,7 +272,7 @@ for coord = 1:length(xcells) % for all start points
     mid = (LL+UL)/2; mid(end) = 360;
 
         for i = 1:length(LL)
-            rank_val_G(i) = mean(sumCountG(LL(i):UL(i)));
+            rank_val_G(i) = mean(sumCountG(LL(i):UL(i))); % find the mean for each bin
             
                 if LL(i) > UL(i) % Wrap around the bin edges
                     rank_val_G(i) = mean([sumCountG(LL(i):end), sumCountG(1:UL(i))]);
@@ -549,15 +564,15 @@ T.color(T.isAbove) = 'r';
 
 
     %% ########################### Plotting ###########################
-    
-figure(2)
+
+figure
 sub_1 = subplot(2,3,1);
-imageschs(DEMc), colormap(sub_1, parula); 
+imageschs(DEM), colormap(sub_1, parula); 
 hold on; plot(S, 'b'); scatter(xcells, ycells, 'rx')
 plot(x_all, y_all, 'k')
 xlabel('East')
 ylabel('North')
-col2 = colorbar; col2.Limits(2) = max(max(DEMc.Z));
+col2 = colorbar; col2.Limits(2) = max(max(DEM.Z));
 ylabel(col2, 'Elevation (m)')
 t1 = title(sprintf('%s', volcano), 'fontsize', 18);
 t1.Position(2) = t1.Position(2)+1e2;
@@ -623,9 +638,10 @@ set(gca, 'Position', [0.13,0.217,...
     0.825,0.261])
 set(gcf, 'Position', get(0, 'Screensize'));
 set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14);
-set(figure(2), 'PaperType', 'A1', 'PaperOrientation', 'landscape')
+set(figure, 'PaperType', 'A1', 'PaperOrientation', 'landscape')
 
-figure(3)
+figure
+% set(gcf, 'visible','off')
 title('Path of steepest descent')
 O(:,swath_nb+1) = NaN; O(O==0) = NaN;
 R = (1:(size(O,1))); % number of rows in output
@@ -665,14 +681,11 @@ maxr = max(r_db);
     
     mkdir(sprintf('%s/%s/%d', 'Out', volcano, maxr+1))
     
-    
-    savefig(figure(1), sprintf('%s/%s/%d/%s%s', 'Out',volcano, maxr+1, volcano, '_roi'))
-    print(figure(1), '-dpdf', fullfile(sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_roi')))
-    savefig(figure(2), sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano))
-    print(figure(2), '-dpdf', fullfile(sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano)))
-    savefig(figure(3), sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar'))
-    print(figure(3), '-dpdf', fullfile(sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar')))
-   time = toc
+    savefig(figure(1), sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano))
+    print(figure(1), '-dpdf', fullfile(sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano)))
+    savefig(figure(2), sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar'))
+    print(figure(2), '-dpdf', fullfile(sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar')))
+    time = toc
     save(sprintf('%s/%s/%d/%s', 'Out', volcano, maxr+1, 'workspace'))
     save('workspace')
 
