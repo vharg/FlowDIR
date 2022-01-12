@@ -1,21 +1,5 @@
-function [] = FlowDir(volcano, dem, SWlength, craterX_temp, craterY_temp, buff, thr, steps, uncertainty, uncertM, varargin)
-%% FlowDIR provides a probabilistic forecast of the directionality of topographically
-% controlled hazardous flows. It can be run through the command line or using pop-up GUIs that
-% guide with input parameterisation 
-%_______________________________________________________________________________________________________
-%% Required input arguments:
-%
-%       volcano:            The name of the volcano                   e.g. 'Shinmoedake'
-%       dem:                Digital elevation model filename          e.g. 'Shinmoedake_2016_15m.tif'       
-%       SWlength:           Maximum swath length in metres. This should be large enough to extend out of the summit crater/region.
-%       craterX_temp:       The X coordinate of the start point.
-%       craterY_temp:       The Y coordinate of the start point.
-%       buff:               Length of the buffer zone in metres.
-%       thr:                Elevation gain threshold in meters. FlowDIR calculates whether the along swath elevation gain is above the threshold.
-%       uncertainty:        Choose whether uncertainty in the start point is included. Input 0/1.     
-%       uncertM:            If uncertainty = 1, quantify the size of the initialisation polygon in m. 
-%_______________________________________________________________________________________________________
-% Written by Elly Tennant 2020-21
+function [] = FlowDir(volcano, dem, defaultSW, craterX_temp, craterY_temp, buff, Thr, steps, uncertainty, noCells, varargin)
+%% FlowDIR
 
 tic
 warning('off','all')
@@ -32,12 +16,12 @@ inputs = inputdlg(prompt,dlgtitle,dims,definput);
     
 volcano = inputs{1};
 dem = inputs{2};
-SWlength = str2double(inputs(3));
+defaultSW = str2double(inputs(3));
 buff = str2double(inputs(4));
-thr = str2double(inputs(5));
+Thr = str2double(inputs(5));
 steps = str2double(inputs(6));
 uncertainty = str2double(inputs(7));
-uncertM = str2double(inputs(8));
+noCells = str2double(inputs(8));
 
 end
  
@@ -45,7 +29,7 @@ swath_nb = 360;
 % Set the binwidth (number of degrees) to interpolate azimuths to. 22.5 is
 % the default and is centered on north
 interp_to = 22.5; 
-swL = SWlength;
+swL = defaultSW;
 
 DEM = GRIDobj(dem); 
 FD = FLOWobj(DEM);
@@ -76,12 +60,12 @@ end
 % Make sure that when uncertainty is not included the polygon is limited to
 % only one cell sized 
 if uncertainty = 0,
-    uncertM = round(DEM.cellsize)
+    noCells = round(DEM.cellsize)
 end 
 
 % Generate a polygon buffer around the start point and get the startpoints
 % within the polygon
-polyout = polybuffer([craterX_temp craterY_temp],'lines',uncertM,'JointType','square'); 
+polyout = polybuffer([craterX_temp craterY_temp],'lines',noCells,'JointType','square'); 
 
 xcells = linspace(min(polyout.Vertices(:,1)),max(polyout.Vertices(:,1)),...
     round((max(polyout.Vertices(:,1))-min(polyout.Vertices(:,1)))/DEM.cellsize));
@@ -578,8 +562,8 @@ end
 T.elevChange = Mall';
 
     % Identify elevation change above threshold 
-T.isBelow = T.elevChange < thr;
-T.isAbove = T.elevChange >= thr;
+T.isBelow = T.elevChange < Thr;
+T.isAbove = T.elevChange >= Thr;
 T.color(T.isBelow) = 'g';
 T.color(T.isAbove) = 'r';
 
