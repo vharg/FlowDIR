@@ -29,7 +29,7 @@ FlowDIR
 ```
 
 
-<li> FlowDIR can be run from the command line or through dedicated graphical user interfaces. Type `help FlowDIR`into the MATLAB command window to learn more about the inputs required for command line executable mode. To run with the GUIs simply type  `Array.prototype.map()` into the command window and the following GUI will pop up:
+<li> FlowDIR can be run from the command line or through dedicated graphical user interfaces. Type <code>help FlowDIR</code> into the MATLAB command window to learn more about the inputs required for command line executable mode. To run with the GUIs simply type  <code>FlowDIR</code> into the command window and the following GUI will pop up:
 <br/>
 
 
@@ -68,7 +68,7 @@ Start point # [4/17] ...
 Finished
 ```
 
-<li> When FlowDIR is finished, all of the figures along with the workspace containing all variables, will be saved into the `out/VolcanoName/X` folder.
+<li> When FlowDIR is finished, all of the figures along with the workspace containing all variables, will be saved into the <code>out/VolcanoName/X</code> folder.
 
 <br/>
 <img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_ex.png" width="800">
