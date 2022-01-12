@@ -1,4 +1,4 @@
-function [] = FlowDir(volcano, dem, SWlength, craterX_temp, craterY_temp, buff, thr, steps, uncertainty, uncertM, varargin)
+function [] = FlowDIR(volcano, dem, SWlength, craterX_temp, craterY_temp, buff, thr, steps, uncertainty, uncertM, varargin)
 %% FlowDIR provides a probabilistic forecast of the directionality of topographically
 % controlled hazardous flows. It can be run through the command line or using pop-up GUIs that
 % guide with input parameterisation 
@@ -12,6 +12,7 @@ function [] = FlowDir(volcano, dem, SWlength, craterX_temp, craterY_temp, buff, 
 %       craterY_temp:       The Y coordinate of the start point.
 %       buff:               Length of the buffer zone in metres.
 %       thr:                Elevation gain threshold in meters. FlowDIR calculates whether the along swath elevation gain is above the threshold.
+%       steps:              The maximum allowed steps/active cells in the path of steepest descent calculation
 %       uncertainty:        Choose whether uncertainty in the start point is included. Input 0/1.     
 %       uncertM:            If uncertainty = 1, quantify the size of the initialisation polygon in m. 
 %_______________________________________________________________________________________________________
