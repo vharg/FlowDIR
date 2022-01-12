@@ -29,7 +29,7 @@ FlowDIR
 ```
 
 
-<li> FlowDIR can be run from the command line or through dedicated graphical user interfaces. Type `help FlowDIR`into the MATLAB command window to learn more about the inputs required for command line executable mode. To run with the GUIs simply type `FlowDIR` into the command window and the following GUI will pop up:
+<li> FlowDIR can be run from the command line or through dedicated graphical user interfaces. Type `help FlowDIR`into the MATLAB command window to learn more about the inputs required for command line executable mode. To run with the GUIs simply type  `Array.prototype.map()` into the command window and the following GUI will pop up:
 <br/>
 
 
