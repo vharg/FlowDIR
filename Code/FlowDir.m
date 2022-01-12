@@ -1,8 +1,6 @@
 function [] = FlowDIR(volcano, dem, SWlength, craterX_temp, craterY_temp, buff, thr, steps, uncertainty, uncertM, varargin)
-%% FlowDIR provides a probabilistic forecast of the directionality of topographically
-% controlled hazardous flows. It can be run through the command line or using pop-up GUIs that
-% guide with input parameterisation 
-%_______________________________________________________________________________________________________
+%% FlowDIR provides a probabilistic forecast of the directionality of topographically controlled hazardous flows. It can be run through the command line or using pop-up GUIs that guide with input parameterisation 
+%______________________________________________________________________________________________________________________________________________________________________________________________________________
 %% Required input arguments:
 %
 %       volcano:            The name of the volcano                   e.g. 'Shinmoedake'
@@ -14,8 +12,10 @@ function [] = FlowDIR(volcano, dem, SWlength, craterX_temp, craterY_temp, buff, 
 %       thr:                Elevation gain threshold in meters. FlowDIR calculates whether the along swath elevation gain is above the threshold.
 %       steps:              The maximum allowed steps/active cells in the path of steepest descent calculation
 %       uncertainty:        Choose whether uncertainty in the start point is included. Input 0/1.     
-%       uncertM:            If uncertainty = 1, quantify the size of the initialisation polygon in m. 
-%_______________________________________________________________________________________________________
+%       uncertM:            If uncertainty = 1, quantify the size of the initialisation polygon in m. This should be a multiple of the DEM resolution
+%
+% e.g. FlowDIR('Shinmoedake', 'Shinmoedake_2016_15m.tif',800, 678155.0031, 3532081.651, 50,20, 200, 1, 30)
+%______________________________________________________________________________________________________________________________________________________________________________________________________________
 % Written by Elly Tennant 2020-21
 
 tic
@@ -26,8 +26,8 @@ warning('off','all')
 if nargin == 0 %(Interactive mode with GUIs)
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
     'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
-dlgtitle = 'FlowDir inputs'; dims = [1 50];
-definput = {'Shinmoedake','Shinmoedake_2016_15m_clip.tif','800', '50','20', '500', '1', '15'};
+dlgtitle = 'FlowDIR inputs'; dims = [1 50];
+definput = {'Shinmoedake','Shinmoedake_2016_15m.tif','800', '50','20', '500', '0', '30'};
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
     
     
@@ -76,7 +76,7 @@ end
      
 % Make sure that when uncertainty is not included the polygon is limited to
 % only one cell sized 
-if uncertainty = 0,
+if uncertainty == 0,
     uncertM = round(DEM.cellsize)
 end 
 
