@@ -78,8 +78,8 @@ Finished
 <li> When FlowDIR is finished, all of the figures along with the workspace containing all variables, will be saved into the <code>out/VolcanoName/X</code> folder.
 
 <br/>
-<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_ex.png" width="800">
+<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_example.png" width="800">
 
 ## Citation
-FlowDIR was published in ....
+Please cite FlowDIR as ...
 

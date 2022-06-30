@@ -2,7 +2,7 @@ function [] = FlowDIR(volcano, dem, SWlength, craterX_temp, craterY_temp, buff, 
 %% FlowDIR provides a probabilistic forecast of the directionality of topographically controlled hazardous flows. It can be run through the command line or using pop-up GUIs that guide with input parameterisation 
 % To run with the GUI interface type 'FlowDIR' into the matlab command window and
 % follow the instructions. Alternatively for the command line
-% implementation type FlowDIR(input arguments), e.g. FlowDIR('Shinmoedake', 'Shinmoedake_2016_5m_clip.tif',800, 678155, 3532081, 150,20, 500, 1, 10)
+% implementation type FlowDIR(input arguments), e.g. FlowDIR('Shinmoedake', 'Shinmoedake_2016_5m_clip.tif',800, 678155, 3532081, 150,20, 500, 0, 10)
 %e.g. FlowDIR('Colima', 'Colima.tif',800, 645099, 2158070,150,20, 500, 1, 60)
 % FlowDIR('Merapi', 'MerapiDEM_2015_10m_mrg.tif',800, 438896, 9166379, 150,20, 500, 1, 20)
 %______________________________________________________________________________________________________________________________________________________________________________________________________________
@@ -30,7 +30,7 @@ if nargin == 0 %(Interactive mode with GUIs)
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
     'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
 dlgtitle = 'FlowDIR inputs'; dims = [1 50];
-definput = {'Shinmoedake','Shinmoedake_2016_15m_clip.tif','800', '150','20', '500', '1', '10'};
+definput = {'Shinmoedake','Shinmoedake_2016_5m_clip.tif','800', '150','20', '500', '1', '10'};
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
     
     
@@ -674,6 +674,7 @@ hold on
 xlim([0, swath_nb])
 xlabel('Direction')
 ylabel('Crater elevation (m)')
+set(gca, 'Color', 'None'), set(gca, 'Fontsize', 18);
 elevStart = swathAll(1,1);
 % relabel x axis to bin limits
 labs = {['{\bf N}' newline '0{\circ}'], ['NNE' newline], ['NE' newline], ['ENE' newline], ['{\bf E}' newline '90{\circ}'], ['ESE' newline], ['SE' newline], ['SSE' newline], ['{\bf S}' newline '180{\circ}'],...
@@ -695,7 +696,7 @@ set(gca, 'Color', 'none')
 set(gca, 'Position', [0.13,0.217,...
     0.825,0.261])
 set(gcf, 'Position', get(0, 'Screensize'));
-% set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14);
+
 set(gcf, 'PaperType', 'A1', 'PaperOrientation', 'landscape')
 
 
