@@ -1,5 +1,10 @@
 function [] = FlowDIR(volcano, dem, SWlength, craterX_temp, craterY_temp, buff, thr, steps, uncertainty, uncertM, varargin)
 %% FlowDIR provides a probabilistic forecast of the directionality of topographically controlled hazardous flows. It can be run through the command line or using pop-up GUIs that guide with input parameterisation 
+% To run with the GUI interface type 'FlowDIR' into the matlab command window and
+% follow the instructions. Alternatively for the command line
+% implementation type FlowDIR(input arguments), e.g. FlowDIR('Shinmoedake', 'Shinmoedake_2016_5m_clip.tif',800, 678155, 3532081, 150,20, 500, 1, 10)
+%e.g. FlowDIR('Colima', 'Colima.tif',800, 645099, 2158070,150,20, 500, 1, 60)
+% FlowDIR('Merapi', 'MerapiDEM_2015_10m_mrg.tif',800, 438896, 9166379, 150,20, 500, 1, 20)
 %______________________________________________________________________________________________________________________________________________________________________________________________________________
 %% Required input arguments:
 %
@@ -13,10 +18,8 @@ function [] = FlowDIR(volcano, dem, SWlength, craterX_temp, craterY_temp, buff, 
 %       steps:              The maximum allowed steps/active cells in the path of steepest descent calculation
 %       uncertainty:        Choose whether uncertainty in the start point is included. Input 0/1.     
 %       uncertM:            If uncertainty = 1, quantify the size of the initialisation polygon in m. This should be a multiple of the DEM resolution
-%
-% e.g. FlowDIR('Shinmoedake', 'Shinmoedake_2016_15m.tif',800, 678155.0031, 3532081.651, 50,20, 200, 1, 30)
 %______________________________________________________________________________________________________________________________________________________________________________________________________________
-% Written by Elly Tennant 2020-21
+% Written by Elly Tennant 2020-22
 
 tic
 warning('off','all')
@@ -27,7 +30,7 @@ if nargin == 0 %(Interactive mode with GUIs)
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
     'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
 dlgtitle = 'FlowDIR inputs'; dims = [1 50];
-definput = {'Shinmoedake','Shinmoedake_2016_15m.tif','800', '50','20', '500', '0', '30'};
+definput = {'Shinmoedake','Shinmoedake_2016_15m_clip.tif','800', '150','20', '500', '1', '30'};
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
     
     
@@ -60,6 +63,8 @@ title('Click +/- to zoom in/out')
 waitfor(msgbox('Click again for start point'))
 [craterX_temp, craterY_temp] = ginput(1);
 end
+
+close all
     %% Plot DEM and select start point
     
 % figure(1)
@@ -77,7 +82,7 @@ end
 % Make sure that when uncertainty is not included the polygon is limited to
 % only one cell sized 
 if uncertainty == 0,
-    uncertM = round(DEM.cellsize)
+    uncertM = round(DEM.cellsize);
 end 
 
 % Generate a polygon buffer around the start point and get the startpoints
@@ -243,26 +248,16 @@ for coord = 1:length(xcells) % for all start points
             elev_all(i) = swathAll_clip(id_clip,i);
         end
     
-%         if coord == 1 % Plot the first profile (using the selected start point)
-%             plot(sub3,(1:360),elev_all, 'k')
-%             xlim([0, swath_nb])
-%             xlabel('Azimuth')
-%             ylabel('Crater elevation (m)')
-%             elevStart = swathAll(1,1);
-%             yline(elevStart, 'r--')
-%             text(20, double(elevStart+2),'Elevation of start point', 'color', 'r')
-%             set(gca, 'Color', 'none')
-%             set(gca, 'Position', [0.13,0.2173,0.8255,0.2613])
-%             set(gcf, 'Position', get(0, 'Screensize'));
-
-%        end
+                 if coord == 1 % Plot the first profile (using the selected start point)
+                        elev_all_start1 = elev_all;
+                 end
         
     hold on,
 %     figure(1)
 %     imageschs(DEM); colormap(parula); xlabel('East'); ylabel('North'); hold on
 %     plot(x_all, y_all, 'k')
 
-        %% 1) Linear elevation gradient
+        %% 1) Radial analysis of the elevation gradient
 
     swathAll_clip(swathAll_clip==0)= NaN;
     swathAll_clip = swathAll_clip(1:id_clip,:);
@@ -310,11 +305,48 @@ for coord = 1:length(xcells) % for all start points
     % Find the percentage of the total sum
     T.prob_G = (T.inv_rank_val_G/tot_SUM_G)*100;
     save('Table_strt_1', 'T');
+    save('workspace');
     
     t0 = T; 
     T_all{coord} = t0; % One table is generated per start point
 
+        %% 1 cont) Total elevation change over swath length 
     
+    % For start point 1
+load('Table_strt_1.mat')
+[r, c] = size(swathAll_clip);
+Dif = zeros(r-1, c);
+
+    % Calculates the difference in elevation between adjacent cells along
+    % an azimuth
+    for iS = 1:swath_nb
+    Dif(:,iS) = diff(swathAll_clip(:,iS));
+    end
+    
+Dif(isnan(Dif)) = 0;
+sumDif = sum(Dif, 1);
+
+Mall = [];
+swathSizeIntAll = [];
+
+for m = (1:interp_to:swath_nb)
+M = mean(sumDif(m:(m+(interp_to-1))));
+swathSizeInt = mean(swathSize(m:round(m+(interp_to-1))));
+swathSizeIntAll = [swathSizeIntAll,swathSizeInt]; % interpolate swath size from 360 to 36
+Mall = [Mall, M];
+end
+
+T.elevChange = Mall';
+
+% Identify elevation change above threshold, use this to set marker size
+T.isBelow = T.elevChange < thr;
+T.isAbove = T.elevChange >= thr;
+T.size(T.isBelow) = 1;
+T.size(T.isAbove) = 5;
+
+
+
+
         %% 2) Path of steepest descent
         
     swathAll_clip( ~any(swathAll_clip,2), : ) = [];
@@ -512,85 +544,68 @@ end
 
     
   %% Calculate the average and standard deviation for bins (stage 2)
-  % This was only for the sensitivity testing.
     output_all(isnan(output_all))= 0;
     
-        % sum down cols to get a score per azimuth for each start point
-        % sum in 3rd dimension to get average hits per cell
+        % O = matrix of average number of hits per cell (averaged over N
+        % starting points) as displayed in figure 1, subplot 3
         O = sum(output_all,3)/length(xcells); 
-        
-    sum_output_all = zeros(1,360,length(xcells));
-        for j = 1:length(xcells)
-        sum_output_all(:,:,j) = sum(output_all(:,:,j),1);
-        end 
 
-    avHits = sum_output_all/length(xcells); % this is the average
+    %% Sensitivity testing
+     O_new = O;
+    O_new(isnan(O_new))= 0;
+    % Sum down the columns of O to get a 1*360 vector
+    sum_cols_O = sum(O_new, 1);
 
-        % Bin avHits for sub-cardinal directions
+    % Interpolate into the intercardinal bins
     for i = 1:length(LL)
-        for j = 1:length(xcells)
-        avHits_temp = avHits(:,:,j);
-        avHits_int(i,:,j) = mean(avHits_temp(LL(i):UL(i)));
-        % Wrap around bin edges
-        if LL(i) > UL(i)
-            avHits_int(i,:,j) = mean([avHits_temp(LL(i):end), avHits_temp(1:UL(i))]);
-        end    
-        end
+            O_int(i) = mean(sum_cols_O(LL(i):UL(i)));
+
+            % Wrap around bin edges
+                if LL(i) > UL(i)
+                O_int(i) = mean([O_int(LL(i):end), O_int(1:UL(i))]);
+                end    
     end
 
-  % find average per bin
-av2 = mean(avHits_int,3);
+    O_int = O_int';
+    % convert this into a percentage, so that we can compare the
+    % distribution between bins.
+    O_int_perc = (O_int/sum(O_int))*100;
+%%
 
-  % find STD per bin
-sq_avHits = squeeze(avHits_int);
-std2 = std(sq_avHits,0,2);
+% Get coordinates of bin centerpoints along the buffer limit
 
-% convert std into standard error
-SE2 = std2/sqrt(length(xcells)); 
-
+Xcoords = x_all(round(T.mid)); Ycoords = y_all(round(T.mid));
 
     
-    %% 3) Total elevation change over swath length 
-    
-    % For start point 1
-load('Table_strt_1.mat')
-[r, c] = size(swathAll_clip);
-Dif = zeros(r-1, c);
-
-    % Calculates the difference in elevation between adjacent cells along
-    % an azimuth
-    for iS = 1:swath_nb
-    Dif(:,iS) = diff(swathAll_clip(:,iS));
-    end
-    
-Dif(isnan(Dif)) = 0;
-sumDif = sum(Dif, 1);
-
-Mall = [];
-swathSizeIntAll = [];
-
-for m = (1:interp_to:swath_nb)
-M = mean(sumDif(m:(m+(interp_to-1))));
-swathSizeInt = mean(swathSize(m:round(m+(interp_to-1))));
-swathSizeIntAll = [swathSizeIntAll,swathSizeInt]; % interpolate swath size from 360 to 36
-Mall = [Mall, M];
-end
-
-T.elevChange = Mall';
-
-    % Identify elevation change above threshold 
-T.isBelow = T.elevChange < thr;
-T.isAbove = T.elevChange >= thr;
-T.color(T.isBelow) = 'g';
-T.color(T.isAbove) = 'r';
-
 
     %% ########################### Plotting ###########################
 
-figure
+% Save figures and workspace
+if not(isfolder(sprintf('%s/%s','Out', volcano)))
+    mkdir(sprintf('%s/%s','Out', volcano))
+end
+
+if not(isfolder(sprintf('%s/%s/%d', 'Out', volcano, 0)))
+    mkdir(sprintf('%s/%s/%d', 'Out', volcano, 0))
+end
+
+
+runs = dir(sprintf('%s/%s', 'Out', volcano));
+r = struct2cell(runs);
+r_temp = r(1,:);
+r_db = str2double(r_temp);
+maxr = max(r_db);
+    
+mkdir(sprintf('%s/%s/%d', 'Out', volcano, maxr+1))
+
+save(sprintf('%s/%s/%d/%s', 'Out', volcano, maxr+1, 'workspace'))
+
+
+figure(1)
 sub_1 = subplot(2,3,1);
 imageschs(DEM), colormap(sub_1, parula); 
-hold on; plot(S, 'b'); scatter(xcells, ycells, 'rx')
+hold on; %plot(S, 'b'); 
+scatter(xcells, ycells, 'rx');
 plot(x_all, y_all, 'k')
 xlabel('East')
 ylabel('North')
@@ -598,26 +613,32 @@ col2 = colorbar; col2.Limits(2) = max(max(DEM.Z));
 ylabel(col2, 'Elevation (m)')
 t1 = title(sprintf('%s', volcano), 'fontsize', 18);
 t1.Position(2) = t1.Position(2)+1e2;
-set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14)
-
+set(gca, 'Color', 'None'), set(gca, 'Fontsize', 18)
 
 subplot(2,3,2);
-for i = 1:length(T.elevChange)
-    color = T.color(i);
-polarscatter(T.mid(i)*pi/180,  max(T.prob_G)+1, 'd', color , 'filled')
+rho = (max(T.prob_G)+1)+zeros(height(T),1);
+colors = T.elevChange;
+sz = (T.size)*50;
+tbl = table(T.mid*pi/180, rho, colors, sz);
+
+polarscatter(tbl, 'Var1', 'rho', 'filled', 'ColorVariable', 'colors', 'SizeVariable', 'sz', 'Marker', 'diamond')
+%colormap(parula(size(T.elevChange,1)-1))
+c = colorbar;
+c.FontSize = 18;
+lrg = sprintf('%s%d%s', '(Larger markers exceed the ', thr, ' m threshold set by the user)');
+ylabel(c,lrg);
 hold on
-end
 edges = [(T.LL*pi/180); ((T.LL(end)+interp_to)*pi/180)]';
 polarhistogram('BinEdges',edges,'BinCounts',sumT, 'FaceColor','blue','FaceAlpha',.7);
 set(gca, 'ThetaDir', 'clockwise', 'ThetaZeroLocation', 'top');
 thetaticklabels({'{\bf N}', 'NNE', 'NE', 'ENE', '{\bf E}', 'ESE', 'SE', 'SSE', '{\bf S}',...
     'SSW', 'SW', 'WSW', '{\bf W}', 'WNW', 'NW', 'NNW'})
 thetaticks(0:interp_to:swath_nb)
-title('Linear elevation gradient')
+title('Radial analysis of the elevation gradient')
 hold on
 ang = T.mid.*pi/180;
 polarwitherrorbar(ang,sumT,SE') % plot error bars on the data
-set(gca, 'Fontsize', 14)
+set(gca, 'Fontsize', 18)
 
 all = {};
 rtl = rticklabels;
@@ -641,29 +662,47 @@ col3 = colorbar;
 ylabel(col3, 'Number of hits')
 xlabel('Azimuth ({\circ})')
 ylabel('Distance (m)')
-ticks=get(gca,'YTickLabels');%retrieve current ticks
-ticks=round(str2double(ticks)*DEM.cellsize); ticks = round(ticks-DEM.cellsize);
-set(gca,'YTickLabels',ticks)
+% Change ticks labels to reflect the distance rather than the number of cells. 
+yt = get(gca, 'YTick');                                 % 'YTick' Values
+set(gca, 'YTick', yt, 'YTickLabel', round(yt*DEM.cellsize))  
 title('Path of steepest descent')
-set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14);
+set(gca, 'Color', 'None'), set(gca, 'Fontsize', 18);
 
 subplot(2,3,4:6)
-plot((1:360),elev_all, 'k')
+plot((1:360),elev_all_start1, 'k')
+hold on
 xlim([0, swath_nb])
-xlabel('Azimuth ({\circ})')
+xlabel('Direction')
 ylabel('Crater elevation (m)')
 elevStart = swathAll(1,1);
+% relabel x axis to bin limits
+labs = {['{\bf N}' newline '0{\circ}'], ['NNE' newline], ['NE' newline], ['ENE' newline], ['{\bf E}' newline '90{\circ}'], ['ESE' newline], ['SE' newline], ['SSE' newline], ['{\bf S}' newline '180{\circ}'],...
+    ['SSW' newline], ['SW' newline], ['WSW' newline], ['{\bf W}' newline '270{\circ}'], ['WNW' newline], ['NW' newline], ['NNW' newline], ['{\bf N}' newline '360{\circ}']};
+xticks([0; T.LL]);
+xtickloc = ([0; T.mid]);
+xticklabels([])
+a = zeros(length(labs),1); 
+a(:) = (min(yticks))-20; % get y position for labels
+% add x bin limit labels
+for i = 1:length(labs)
+text(xtickloc(i)-2, a(i), labs(i), 'FontSize', 18)
+end
+
+set(gca, 'XGrid', 'on')
 yline(elevStart, 'r--')
 text(20, double(elevStart+2),'Elevation of start point', 'color', 'r')
 set(gca, 'Color', 'none')
 set(gca, 'Position', [0.13,0.217,...
     0.825,0.261])
 set(gcf, 'Position', get(0, 'Screensize'));
-set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14);
-set(figure, 'PaperType', 'A1', 'PaperOrientation', 'landscape')
+% set(gca, 'Color', 'None'), set(gca, 'Fontsize', 14);
+set(gcf, 'PaperType', 'A1', 'PaperOrientation', 'landscape')
 
-figure
-% set(gcf, 'visible','off')
+
+
+
+figure(2)
+%set(gcf, 'visible','off')
 title('Path of steepest descent')
 O(:,swath_nb+1) = NaN; O(O==0) = NaN;
 R = (1:(size(O,1))); % number of rows in output
@@ -686,33 +725,25 @@ end
 
 fprintf('%s\n', 'Saving figures...' ); 
     
-% Save figures and workspace
-if not(isfolder(sprintf('%s/%s','Out', volcano)))
-    mkdir(sprintf('%s/%s','Out', volcano))
-end
 
-if not(isfolder(sprintf('%s/%s/%d', 'Out', volcano, 0)))
-    mkdir(sprintf('%s/%s/%d', 'Out', volcano, 0))
-end
-    
-runs = dir(sprintf('%s/%s', 'Out', volcano));
-r = struct2cell(runs);
-r_temp = r(1,:);
-r_db = str2double(r_temp);
-maxr = max(r_db);
-    
-    mkdir(sprintf('%s/%s/%d', 'Out', volcano, maxr+1))
     
     savefig(figure(1), sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano))
     print(figure(1), '-dpdf', fullfile(sprintf('%s/%s/%d/%s','Out', volcano, maxr+1, volcano)))
     savefig(figure(2), sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar'))
     print(figure(2), '-dpdf', fullfile(sprintf('%s/%s/%d/%s%s', 'Out', volcano, maxr+1, volcano, '_polar')))
-    time = toc
-    save(sprintf('%s/%s/%d/%s', 'Out', volcano, maxr+1, 'workspace'))
-    save('workspace')
+    time = toc;
+
 
 delete Table_strt_1.mat;
 
+
+direction = {'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S','SSW', 'SW', 'WSW', ' W', 'WNW', 'NW', 'NNW','N'};
+print_REG = table(direction', Xcoords', Ycoords', sumT);
+print_REG.Properties.VariableNames = [{'Direction'}, {'X coordinate'}, {'Y coordinate'}, {'% probability'}];
+figure(1)
+subplot(2,3,1)
+scatter(print_REG{:,2}, print_REG{:,3}, 'c');
+print_REG
 fprintf('%s\n', 'Finished!' ); 
 
 

@@ -1,11 +1,11 @@
-## FlowDIR 2021
-*Elly Tennant, Susanna Jenkins, Sebastien Biass*
+## FlowDIR 2022
+*Elly Tennant, Susanna Jenkins, Sébastien Biass*
 
-FlowDIR is a MATLAB tool for forecasting the travel directions of topographically controlled hazardous flows. This page is meant as a quick start guide, for more information and an understanding of how FlowDIR works please refer to Tennant et al., (...). 
+FlowDIR is a MATLAB tool for forecasting the travel directions of topographically controlled hazardous flows. This page is meant as a quick start guide, for more information and an understanding of how FlowDIR works please refer to Tennant et al., (in prep)... 
 ## Getting started
 
 
-FlowDIR was written using MATLAB 2021a. Before starting ensure that you have the following MATLAB toolboxes installed: mapping; image processing, parallel computing.
+FlowDIR was written using MATLAB v9.12. Before starting ensure that you have the following MATLAB toolboxes installed: mapping; image processing, parallel computing.
 
 <ol> 
 
@@ -16,7 +16,7 @@ FlowDIR
    ├── Code
    |	 └── FlowDIR.m
    ├── DEMs
-   |	 └── Shinmoedake_2016_15m.tif
+   |	 └── Shinmoedake_2016_5m.tif
    ├── Dependancies
    |	 ├── topotoolbox-master
    |	 ├── invprctile.m
@@ -29,7 +29,13 @@ FlowDIR
 ```
 
 
-<li> FlowDIR can be run from the command line or through dedicated graphical user interfaces. Type <code>help FlowDIR</code> into the MATLAB command window to learn more about the inputs required for command line executable mode. To run with the GUIs simply type  <code>FlowDIR</code> into the command window and the following GUI will pop up:
+<li> FlowDIR can be run from the command line as follows:
+
+`FlowDIR('Shinmoedake', 'Shinmoedake_2016_5m.tif',800, 678155.0031, 3532081.651, 50,20, 200, 1, 30)`
+
+Type <code>help FlowDIR</code> into the MATLAB command window to learn more about the inputs required for command line executable mode. 
+
+Alternatively, to run with the dedicated graphical user interface (GUI) simply type  <code>FlowDIR</code> into the command window and the following will pop up:
 <br/>
 
 
@@ -37,15 +43,16 @@ FlowDIR
 
 <li> The input parameters are defined as:
 
-|  FlowDIR input    |  |
-| ----------- | ----------- |
-| DEM file      | This should be a .tif format file and projected into the UTM coordinate system       |
-| Default swath length   | This is the maximum distance away from the starting point that may be considerd in the calculation. FlowDIR generates swaths extending from the start point to this length. The highest elevation along each swath is identified and swaths are clipped to this and a buffer is applied. This value should extend well beyond the crater edge.        |
-| Buffer (m)     | Buffer applied to the detected crater perimeter. The perimeter + this buffer will be the area included in the calculation. For dome summit topographies the maximum elevation along swath will be the summit, and swaths will extend from the start point to this buffer length.      |
-|   Elevation threshold   | This is a threshold used for crater overtopping and is not relevant to dome type topographies. FlowDIR calculates the accumulated elevation change along the swath. Direction bins are identified as having along swath elevation gains above or below this threshold. Directions above this threshold cannot be overtopped.   |
-| Maximum number of steps allowed   | Used in stage 2 of the calculation (POSD). FlowDIR calculates the least cost path through the elevation matrix. This is the maximum number of cells that can be traversed in this calculation.  |
-|  Capture uncertainty in start? (0/1)   | Binary option to include uncertainty in the user defined start point. When capture uncertainty in start = 1, the initialisation polygon is enlarged and simulations are run using secondary start points within the polygon in addition to the initial starting coordinate. The size of the polygon is determined by the start uncertainty. |
-|  Start uncertainty (m)  | Here we define the distance to which uncertainty is included, for example if the DEM resolution is 10 m and 20 m is selected here, simulations are initiated from the 2 cells adjacent to the selected start point in each direction in addition to the start point, such that 17 unique simulations are conducted. |
+|  FlowDIR input    | Description | Suggested range|
+| ----------- | ----------- | ----------- |
+| DEM file      | This should be a .tif format file and projected into the UTM coordinate system       |-|
+| Starting coordinate	| A single point in UTM coordinates (X,Y).|-|
+| Swath length  (m) | Should be long enough to extend from the starting coordinate outside of the crater in all directions. | 500 – 1000 m (default 800 m)|
+| Buffer (m)     | Swaths are clipped to the maximum elevation and a buffer is applied so that the swath extends outside of the crater. For breached craters a buffer towards the higher end of the range may be required.      | 50 – 150 m (no default)|
+|   Elevation threshold (m)  | Total elevation change along swath above which the flow is not expected to overtop the crater. Should be based on knowledge of the current crater morphology (maximum height from the base to the rim) along with past erupted volumes, and flow rheologies.   | 20 – 50 m (no default)|
+| Maximum number of steps allowed   | The maximum number of steps allowed in the path of steepest descent.  | 200-600 (default 500)|
+|  Capture uncertainty in start? (0/1)   | Input 1 to run FlowDIR with uncertainty in the starting coordinate. When uncertainty = 0, the initialisation polygon edges are 1 DEM cell width from the starting coordinate, and the polygon vertices are used as additional initialisation points such that there are 5 in total. When uncertainty = 1, the user can set the size of the polygon to increase the number of initialisation points. | Default 0|
+|  Start uncertainty (m)  | When uncertainty = 1, this is used to set the size of the polygon. | No default|
 
 
 
@@ -74,5 +81,5 @@ Finished
 <img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_ex.png" width="800">
 
 ## Citation
-FlowDIR was published in ...
+FlowDIR was published in ....
 
