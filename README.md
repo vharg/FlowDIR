@@ -16,7 +16,7 @@ FlowDIR
    ├── Code
    |	 └── FlowDIR.m
    ├── DEMs
-   |	 └── Shinmoedake_2016_5m.tif
+   |	 └── Shinmoedake_2016_5m_clip.tif
    ├── Dependancies
    |	 ├── topotoolbox-master
    |	 ├── invprctile.m
@@ -31,7 +31,7 @@ FlowDIR
 
 <li> FlowDIR can be run from the command line as follows:
 
-`FlowDIR('Shinmoedake', 'Shinmoedake_2016_5m.tif',800, 678155.0031, 3532081.651, 50,20, 200, 1, 30)`
+`FlowDIR('Shinmoedake', 'Shinmoedake_2016_5m_clip.tif',800, 678155, 3532081, 150,20, 500, 1, 10)`
 
 Type <code>help FlowDIR</code> into the MATLAB command window to learn more about the inputs required for command line executable mode. 
 

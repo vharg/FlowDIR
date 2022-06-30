@@ -30,7 +30,7 @@ if nargin == 0 %(Interactive mode with GUIs)
 prompt = {'Volcano name:','DEM file:','Default swath length:', 'Buffer (m)', 'Elevation threshold (m):',...
     'Maximum number of steps allowed:', 'Capture uncertainty in start? (0/1)', 'Start uncertainty (m)'};
 dlgtitle = 'FlowDIR inputs'; dims = [1 50];
-definput = {'Shinmoedake','Shinmoedake_2016_15m_clip.tif','800', '150','20', '500', '1', '30'};
+definput = {'Shinmoedake','Shinmoedake_2016_15m_clip.tif','800', '150','20', '500', '1', '10'};
 inputs = inputdlg(prompt,dlgtitle,dims,definput);
     
     
