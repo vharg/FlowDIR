@@ -1,7 +1,7 @@
-## FlowDIR 2022
+## FlowDIR 2023
 *Elly Tennant, Susanna Jenkins, Sébastien Biass*
 
-FlowDIR is a MATLAB tool for forecasting the travel directions of topographically controlled hazardous flows. This page is meant as a quick start guide, for more information and an understanding of how FlowDIR works please refer to Tennant et al., (in prep)... 
+FlowDIR is a MATLAB tool for forecasting the travel directions of topographically controlled hazardous flows. This page is meant as a quick start guide, for more information and an understanding of how FlowDIR works please refer to Tennant et al., 2023. 
 ## Getting started
 
 
@@ -81,5 +81,5 @@ Finished
 <img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_example.png" width="800">
 
 ## Citation
-Please cite FlowDIR as ...
+Please cite FlowDIR as Tennant, E., Jenkins, S.F. & Biass, S. FlowDIR: a MATLAB tool for rapidly and probabilistically forecasting the travel directions of volcanic flows. J Appl. Volcanol. 12, 10 (2023). https://doi.org/10.1186/s13617-023-00136-3.
 
