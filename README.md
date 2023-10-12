@@ -90,7 +90,7 @@ Finished
 The output figure and the workspace containing all variables will be saved into the out/VolcanoName/X folder.
 
 <br/>
-<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_example.png" width="800">
+<img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake.png" width="800">
 
 ## Citation
 Please cite FlowDIR as Tennant, E., Jenkins, S.F. & Biass, S. FlowDIR: a MATLAB tool for rapidly and probabilistically forecasting the travel directions of volcanic flows. J Appl. Volcanol. 12, 10 (2023). https://doi.org/10.1186/s13617-023-00136-3.
