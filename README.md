@@ -1,7 +1,16 @@
 ## FlowDIR 2023
 *Elly Tennant, Susanna Jenkins, Sébastien Biass*
 
-FlowDIR is a MATLAB tool for forecasting the travel directions of topographically controlled hazardous flows. This page is meant as a quick start guide, for more information and an understanding of how FlowDIR works please refer to Tennant et al., 2023. 
+FlowDIR is a MATLAB tool designed to forecast the travel directions of topographically controlled hazardous flows. The tool consists of two complimentary methods that can be used to estimate flow directionality:
+
+- The azimuthal elevation difference (AED): this method analyses the topography in a straight line from the starting coordinate.
+
+- The least cost path (LCP): this method calculates an optimal path through a grid of elevation values.
+
+This page serves as a succinct introduction to FlowDIR. For a more comprehensive understanding of how FlowDIR works please refer to:
+
+Tennant, E., Jenkins, S.F., Biass, S., (2023). FlowDIR: a MATLAB tool for rapidly and probabilistically forecasting the travel directions of volcanic flows. Journal of Applied Volcanology. https://appliedvolc.biomedcentral.com/articles/10.1186/s13617-023-00136-3
+
 ## Getting started
 
 
@@ -9,7 +18,7 @@ FlowDIR was written using MATLAB v9.12. Before starting ensure that you have the
 
 <ol> 
 
-<li> Download and unpack the zipfile into your MATLAB folder ensuring that the paths are set correctly. The folder contains all of the files needed to run FlowDIR along with several case studies. The content of the folder is as follows: 
+<li> Download and unpack the zipfile of code on github into your MATLAB folder ensuring that the paths are set correctly. The folder contains all of the files needed to run FlowDIR along with several case studies. The content of the folder is as follows: 
 
 ```
 FlowDIR
@@ -19,7 +28,6 @@ FlowDIR
    |	 └── Shinmoedake_2016_5m_clip.tif
    ├── Dependancies
    |	 ├── topotoolbox-master
-   |	 ├── invprctile.m
    |	 ├── polarwitherrorbar.m
    |	 └── polarPcolor.m
    └── Out
@@ -31,7 +39,11 @@ FlowDIR
 
 <li> FlowDIR can be run from the command line as follows:
 
-`FlowDIR('Shinmoedake', 'Shinmoedake_2016_5m_clip.tif',800, 678155, 3532081, 150,20, 500, 1, 10)`
+`FlowDIR('Shinmoedake', 'Shinmoedake_2016_5m_clip.tif', 800, 678187, 3532034, 50, 30, 1, 50, 30000)`
+
+Where the inputs are as follows: 
+
+FlowDIR(volcano name, DEM filename, swath length (m), starting coordinate X, starting coordinate Y, buffer (m), elevation threshold (m), uncertainty in start (0/1), start uncertainty (m), least cost path timestep for save)
 
 Type <code>help FlowDIR</code> into the MATLAB command window to learn more about the inputs required for command line executable mode. 
 
@@ -45,14 +57,13 @@ Alternatively, to run with the dedicated graphical user interface (GUI) simply t
 
 |  FlowDIR input    | Description | Suggested range|
 | ----------- | ----------- | ----------- |
-| DEM file      | This should be a .tif format file and projected into the UTM coordinate system       |-|
+| DEM file      | Path to a .tif file projected to UTM coordinates       |-|
 | Starting coordinate	| A single point in UTM coordinates (X,Y).|-|
-| Swath length  (m) | Should be long enough to extend from the starting coordinate outside of the crater in all directions. | 500 – 1000 m (default 800 m)|
-| Buffer (m)     | Swaths are clipped to the maximum elevation and a buffer is applied so that the swath extends outside of the crater. For breached craters a buffer towards the higher end of the range may be required.      | 50 – 150 m (no default)|
-|   Elevation threshold (m)  | Total elevation change along swath above which the flow is not expected to overtop the crater. Should be based on knowledge of the current crater morphology (maximum height from the base to the rim) along with past erupted volumes, and flow rheologies.   | 20 – 50 m (no default)|
-| Maximum number of steps allowed   | The maximum number of steps allowed in the path of steepest descent.  | 200-600 (default 500)|
-|  Capture uncertainty in start? (0/1)   | Input 1 to run FlowDIR with uncertainty in the starting coordinate. When uncertainty = 0, the initialisation polygon edges are 1 DEM cell width from the starting coordinate, and the polygon vertices are used as additional initialisation points such that there are 5 in total. When uncertainty = 1, the user can set the size of the polygon to increase the number of initialisation points. | Default 0|
-|  Start uncertainty (m)  | When uncertainty = 1, this is used to set the size of the polygon. | No default|
+| Swath length  (m) | The initial swath length prior to clipping. This needs to be long enough to extend from the starting coordinate to outside of the summit region in all directions. | 500 – 1000 m (default 800 m)|
+| Buffer (m)     | Swaths are clipped to the maximum elevation plus the buffer. This is used to extract the summit region.      | 50 – 150 m (no default)|
+|   Elevation threshold (m)  | The elevation change values calculated as part of the AED procedure for each azimuth bin are compared to this value. If the value is below this threshold the crater wall section is likely to be overtopped and if the value is above this threshold the crater wall section is unlikely to be overtopped.   | 20 – 50 m (no default)|
+|  Capture uncertainty in start? (0/1)   | Input 1 to run FlowDIR with uncertainty in the starting coordinate. When uncertainty = 0, the initialisation polygon edges are 1 DEM cell width from the starting coordinate, resulting in nine initialisation points. | Default 0|
+|  Start uncertainty (m)  | When uncertainty = 1, the user can set the size of the polygon width in meters to increase the number of initialisation points. | No default|
 
 
 
@@ -75,7 +86,8 @@ Start point # [4/17] ...
 Finished
 ```
 
-<li> When FlowDIR is finished, all of the figures along with the workspace containing all variables, will be saved into the <code>out/VolcanoName/X</code> folder.
+<li> When FlowDIR is finished, the AED probabilities and the coordinates of the bin centre points at the buffer limit will be printed to the command window.
+The output figure and the workspace containing all variables will be saved into the out/VolcanoName/X folder.
 
 <br/>
 <img src="https://github.com/EllyTennant/FlowDir/blob/main/images/Shinmoedake_example.png" width="800">
