@@ -18,7 +18,7 @@ fake = polarplot(angle,max(avg+error)*ones(1,n_data)); set(fake,'Visible','off')
 set(gca, 'ThetaDir', 'clockwise', 'ThetaZeroLocation', 'top');
 
 
-polarplot(angle,avg,'.b');
+polarplot(angle,avg,'.r');
 set(gca, 'ThetaDir', 'clockwise', 'ThetaZeroLocation', 'top');
 
 for ni = 1 : n_data
